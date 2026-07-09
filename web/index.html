@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>salmi — Strait of Hormuz passability monitor</title>
+  <meta name="description" content="Is the Strait of Hormuz open? Live ships, a transparent passability index, oil markets, news pressure — and what it means in Finland." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛳️</text></svg>" />
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-name">salmi</span>
+      <span class="brand-sub" data-i18n="app.subtitle">Strait of Hormuz passability monitor</span>
+    </div>
+    <div id="band-chip" class="band-chip band-none">
+      <span class="band-dot"></span>
+      <span id="band-label" data-i18n="status.warming">warming up…</span>
+    </div>
+    <button id="lang-toggle" class="lang-toggle" title="Kieli / Language">FI</button>
+  </header>
+
+  <main id="layout">
+    <aside id="left" class="panel">
+      <section>
+        <h2 data-i18n="status.title">Passability</h2>
+        <div id="hpi-gauge" class="gauge"></div>
+        <ul id="hpi-components" class="components"></ul>
+        <p class="fineprint">
+          <a href="#" id="methodology-link" data-i18n="methodology.link">How is this computed?</a>
+        </p>
+      </section>
+      <section>
+        <h2 data-i18n="status.transitsTitle">Daily transits (IMF PortWatch)</h2>
+        <div id="transit-spark" class="spark"></div>
+        <div id="counters" class="counters"></div>
+      </section>
+      <section>
+        <h2 data-i18n="status.tickerTitle">Live gate crossings</h2>
+        <ul id="ticker" class="ticker"><li class="muted" data-i18n="status.tickerEmpty">Waiting for ships to cross the narrows…</li></ul>
+      </section>
+    </aside>
+
+    <div id="map"></div>
+
+    <aside id="right" class="panel">
+      <section>
+        <h2 data-i18n="markets.brentTitle">Brent crude (USD/bbl)</h2>
+        <div id="brent-now" class="bignum">–</div>
+        <div id="brent-chart" class="chart"></div>
+      </section>
+      <section>
+        <h2 data-i18n="markets.oddsTitle">Prediction market</h2>
+        <div id="poly-chip" class="odds-chip">–</div>
+        <p class="fineprint" id="poly-desc" data-i18n="markets.oddsDesc">Polymarket: traffic returns to normal by Jul 31</p>
+      </section>
+      <section>
+        <h2 data-i18n="news.title">News pressure</h2>
+        <div id="news-meta" class="fineprint"></div>
+        <ul id="headlines" class="headlines"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <footer id="footer">
+    <span data-i18n="footer.sources">Data:</span>
+    <a href="https://aisstream.io" target="_blank" rel="noopener">AISStream</a> ·
+    <a href="https://portwatch.imf.org/pages/cb5856222a5b4105adc6ee7e880a1730" target="_blank" rel="noopener">IMF PortWatch</a> ·
+    <a href="https://polymarket.com" target="_blank" rel="noopener">Polymarket</a> ·
+    <a href="https://www.gdeltproject.org" target="_blank" rel="noopener">GDELT</a> ·
+    Yahoo Finance ·
+    <a href="https://github.com/kurkista/salmi" target="_blank" rel="noopener">GitHub</a>
+    <span class="spacer"></span>
+    <span class="fineprint" data-i18n="footer.disclaimer">Not navigation or trading advice.</span>
+  </footer>
+
+  <dialog id="methodology-dialog"><div id="methodology-body"></div>
+    <form method="dialog"><button data-i18n="methodology.close">Close</button></form>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
