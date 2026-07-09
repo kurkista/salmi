@@ -111,9 +111,15 @@ export const GDELT = {
   docUrl: 'https://api.gdeltproject.org/api/v2/doc/doc',
   query: '"strait of hormuz"',
   // GDELT asks for ≥5 s between requests; we space consecutive calls by this.
-  spacingMs: 6_000,
-  pollMs: 60 * 60_000,
+  // 30-min cadence + in-query retries: fly's shared IPv4 egress NAT means
+  // GDELT's per-IP quota is contested, so most requests 429 — we need chances.
+  spacingMs: 10_000,
+  pollMs: 30 * 60_000,
   headlineCount: 20,
+  // Calm-period window for the N baseline: calendar year 2025, the last
+  // pre-crisis year (the June 2025 scare is absorbed by using the median).
+  calmStart: '20250101000000',
+  calmEnd: '20251231235959',
   userAgent: 'salmi-monitor/0.1 (+https://github.com/kurkista/salmi)',
 };
 

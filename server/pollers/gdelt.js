@@ -14,12 +14,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Each query retries a few times with spaced jitter to find a quota window.
 async function docQuery(params) {
   let lastErr;
-  for (let attempt = 1; attempt <= 4; attempt++) {
+  const attempts = 6; // ~25% per-request success observed on fly → ~82%/query
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     try {
       return await docQueryOnce(params);
     } catch (err) {
       lastErr = err;
-      if (attempt < 4) await sleep(20_000 + Math.random() * 20_000);
+      if (attempt < attempts) await sleep(20_000 + Math.random() * 20_000);
     }
   }
   throw lastErr;
