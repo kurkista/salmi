@@ -6,8 +6,13 @@ import type { Vessel } from './types';
 import { t } from './i18n';
 
 const COLORS = { tanker: '#c98500', cargo: '#3987e5', other: '#898781' };
+const FLIGHT_COLOR = '#9085e9';
+
+interface Aircraft { icao: string; cs: string | null; lon: number; lat: number; alt: number | null; trk: number | null }
 
 const vessels = new Map<number, Vessel>();
+let flights: Aircraft[] = [];
+let flightsVisible = true;
 let map: maplibregl.Map;
 let loaded = false;
 
@@ -52,8 +57,20 @@ function arrowImage(): { width: number; height: number; data: Uint8Array } {
   return ctx.getImageData(0, 0, size, size) as unknown as { width: number; height: number; data: Uint8Array };
 }
 
-export function initMap(container: HTMLElement, initial: Vessel[]): void {
+function flightsFC(): GeoJSON.FeatureCollection {
+  return {
+    type: 'FeatureCollection',
+    features: flights.map((a) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [a.lon, a.lat] },
+      properties: { cs: a.cs ?? a.icao, alt: a.alt ?? 0, trk: a.trk ?? 0 },
+    })),
+  };
+}
+
+export function initMap(container: HTMLElement, initial: Vessel[], initialFlights: Aircraft[] = []): void {
   for (const v of initial) vessels.set(v.mmsi, v);
+  flights = initialFlights;
 
   map = new maplibregl.Map({
     container,
@@ -123,6 +140,32 @@ export function initMap(container: HTMLElement, initial: Vessel[]): void {
       paint: { 'icon-color': colorByCat, 'icon-opacity': 0.95 },
     });
 
+    // flight layer (OpenSky), toggleable, above vessels
+    map.addSource('flights', { type: 'geojson', data: flightsFC() });
+    map.addLayer({
+      id: 'flight-arrows',
+      type: 'symbol',
+      source: 'flights',
+      layout: {
+        'icon-image': 'vessel-arrow',
+        'icon-size': ['interpolate', ['linear'], ['zoom'], 6, 0.3, 10, 0.55],
+        'icon-rotate': ['get', 'trk'],
+        'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true,
+        visibility: flightsVisible ? 'visible' : 'none',
+      },
+      paint: { 'icon-color': FLIGHT_COLOR, 'icon-opacity': 0.75 },
+    });
+    map.on('click', 'flight-arrows', (e) => {
+      const f = e.features?.[0];
+      if (!f) return;
+      const p = f.properties as any;
+      new maplibregl.Popup({ closeButton: false })
+        .setLngLat((f.geometry as any).coordinates)
+        .setHTML(`<strong>✈ ${escapeHtml(String(p.cs))}</strong><br>${Math.round(p.alt)} m`)
+        .addTo(map);
+    });
+
     for (const layer of ['vessel-dots', 'vessel-arrows']) {
       map.on('click', layer, (e) => {
         const f = e.features?.[0];
@@ -154,6 +197,12 @@ export function updateVessels(delta: { upsert?: Vessel[]; remove?: number[] }): 
   src?.setData(toFeatureCollection());
 }
 
+export function updateFlights(data: { aircraft: Aircraft[] }): void {
+  flights = data.aircraft;
+  if (!loaded) return;
+  (map.getSource('flights') as maplibregl.GeoJSONSource | undefined)?.setData(flightsFC());
+}
+
 export const vesselCount = () => vessels.size;
 
 function addLegend(container: HTMLElement) {
@@ -163,8 +212,14 @@ function addLegend(container: HTMLElement) {
     'border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:6px 10px;font-size:11.5px;color:#c3c2b7';
   el.innerHTML = (['tanker', 'cargo', 'other'] as const)
     .map((c) => `<span style="color:${COLORS[c]}">●</span> ${t('legend.' + c)}`)
-    .join('&nbsp;&nbsp;');
+    .join('&nbsp;&nbsp;') +
+    `&nbsp;&nbsp;<label style="cursor:pointer"><input type="checkbox" id="flights-toggle" checked> ` +
+    `<span style="color:${FLIGHT_COLOR}">✈</span> ${t('legend.flights')}</label>`;
   container.appendChild(el);
+  el.querySelector<HTMLInputElement>('#flights-toggle')!.addEventListener('change', (e) => {
+    flightsVisible = (e.target as HTMLInputElement).checked;
+    map.setLayoutProperty('flight-arrows', 'visibility', flightsVisible ? 'visible' : 'none');
+  });
 }
 
 function escapeHtml(s: string): string {

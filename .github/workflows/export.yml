@@ -1,0 +1,33 @@
+# Daily data export — the durability parachute. Aggregates from the live app
+# are committed to the public repo so the data outlives the Fly.io machine
+# (and a static rebuild stays possible after sunset).
+name: export
+
+on:
+  schedule:
+    - cron: '30 3 * * *' # 03:30 UTC daily
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch aggregates from the live app
+        env:
+          SALMI_URL: https://salmi.fly.dev
+        run: |
+          mkdir -p data/export
+          curl -fsS --max-time 60 "$SALMI_URL/api/export" -o data/export/latest.json
+          python3 -m json.tool data/export/latest.json > /dev/null # sanity: valid JSON
+          cp data/export/latest.json "data/export/$(date -u +%F).json"
+      - name: Commit if changed
+        run: |
+          git config user.name "salmi-export[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/export
+          git diff --cached --quiet || git commit -m "chore: daily data export $(date -u +%F)"
+          git push

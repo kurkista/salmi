@@ -185,6 +185,22 @@ export const HILKKA = {
   preCrisisMonth: '2026-02',
 };
 
+// ---------------------------------------------------------------------------
+// Flight layer (M3) — OpenSky Network, free registered account
+// ---------------------------------------------------------------------------
+export const OPENSKY = {
+  tokenUrl: 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token',
+  statesUrl: 'https://opensky-network.org/api/states/all',
+  clientId: process.env.OPENSKY_CLIENT_ID || '',
+  clientSecret: process.env.OPENSKY_CLIENT_SECRET || '',
+  // Wider Gulf region: Iranian airspace closures and Gulf reroutes are the story.
+  bbox: { lamin: 23, lomin: 53, lamax: 28, lomax: 60 },
+  // Registered accounts get 4000 credits/day; this bbox costs ~2/call, so a
+  // 2-min cadence uses ~1440/day. On HTTP 429 we sit out a few runs.
+  pollMs: 2 * 60_000,
+  cooldownRuns: 5,
+};
+
 export const SSE = {
   pingMs: 25_000, // keeps fly's proxy from cutting idle connections
 };

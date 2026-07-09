@@ -2,7 +2,7 @@ import './styles.css';
 import { initI18n } from './i18n';
 import { getState } from './api';
 import { connectSSE } from './sse';
-import { initMap, updateVessels } from './map';
+import { initMap, updateVessels, updateFlights } from './map';
 import * as status from './panels/status';
 import * as markets from './panels/markets';
 import * as hilkka from './panels/hilkka';
@@ -12,7 +12,7 @@ async function boot() {
   await initI18n();
   const state = await getState();
 
-  initMap(document.getElementById('map')!, state.vessels);
+  initMap(document.getElementById('map')!, state.vessels, (state as any).flights?.aircraft ?? []);
   await status.init(state);
   await markets.init(state);
   await hilkka.init();
@@ -24,6 +24,7 @@ async function boot() {
     hpi: status.onHpi,
     metric: (m) => { markets.onMetric(m); hilkka.onMetric(m); },
     headline: markets.onHeadline,
+    flights: updateFlights,
   });
 }
 

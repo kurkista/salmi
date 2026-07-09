@@ -4,7 +4,7 @@ try { process.loadEnvFile(); } catch { /* no .env — fine in production */ }
 
 import {
   DB_PATH, VESSELS, HPI, POLYMARKET, GDELT, BRENT, PORTWATCH,
-  ELECTRICITY, STATFIN, STOCKS, FX,
+  ELECTRICITY, STATFIN, STOCKS, FX, OPENSKY,
 } from './config.js';
 import { openDb, putTransit, prune, transitsSince, upsertVesselsDaily, putSeries } from './db.js';
 import { VesselStore } from './vessels.js';
@@ -22,6 +22,7 @@ import { pollPump } from './pollers/pump.js';
 import { pollCpi } from './pollers/pxweb.js';
 import { pollStocks } from './pollers/stocks.js';
 import { pollFx } from './pollers/fx.js';
+import { pollOpenSky } from './pollers/opensky.js';
 
 openDb(DB_PATH);
 
@@ -91,6 +92,11 @@ register('pump', pollPump, STATFIN.pollMs);
 register('cpi', pollCpi, STATFIN.pollMs);
 register('stocks', pollStocks, STOCKS.pollMs);
 register('fx', pollFx, FX.pollMs);
+if (OPENSKY.clientId && OPENSKY.clientSecret) {
+  register('opensky', pollOpenSky, OPENSKY.pollMs);
+} else {
+  console.warn('[main] OpenSky credentials not set — flight layer disabled.');
+}
 register('hpi', async () => { gatherAndCompute(); }, HPI.recomputeMs);
 register('prune', async () => { prune(); }, 24 * 3600_000);
 
