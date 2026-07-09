@@ -9,7 +9,23 @@ import { bus } from '../bus.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// GDELT rate-limits per IP, and on fly.io the IPv4 egress NAT is shared with
+// other customers — so 429s happen through no fault of our own cadence.
+// Each query retries a few times with spaced jitter to find a quota window.
 async function docQuery(params) {
+  let lastErr;
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      return await docQueryOnce(params);
+    } catch (err) {
+      lastErr = err;
+      if (attempt < 4) await sleep(20_000 + Math.random() * 20_000);
+    }
+  }
+  throw lastErr;
+}
+
+async function docQueryOnce(params) {
   const url = `${GDELT.docUrl}?query=${encodeURIComponent(GDELT.query)}&${params}&format=json`;
   const res = await fetch(url, {
     headers: { 'User-Agent': GDELT.userAgent },
