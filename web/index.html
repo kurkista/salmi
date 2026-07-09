@@ -17,6 +17,7 @@
       <span class="band-dot"></span>
       <span id="band-label" data-i18n="status.warming">warming up…</span>
     </div>
+    <button id="info-btn" class="info-btn" title="What is this?" aria-label="What is this?">ⓘ</button>
     <button id="lang-toggle" class="lang-toggle" title="Kieli / Language">FI</button>
   </header>
 
@@ -31,9 +32,13 @@
         </p>
       </section>
       <section>
+        <h2 data-i18n="layers.title">Live layers</h2>
+        <ul id="layers-list" class="layers"></ul>
+      </section>
+      <section>
         <h2 data-i18n="status.transitsTitle">Daily transits (IMF PortWatch)</h2>
         <div id="transit-spark" class="spark"></div>
-        <div id="counters" class="counters"></div>
+        <p class="fineprint" id="pw-latest"></p>
       </section>
       <section>
         <h2 data-i18n="status.tickerTitle">Live gate crossings</h2>
@@ -54,8 +59,14 @@
         <div id="poly-chip" class="odds-chip">–</div>
         <p class="fineprint" id="poly-desc" data-i18n="markets.oddsDesc">Polymarket: traffic returns to normal by Jul 31</p>
       </section>
+      <section id="suomi-card">
+        <h2>🇫🇮 <span data-i18n="hilkka.tab">Hilkka &amp; Suomi</span></h2>
+        <ul id="suomi-card-lines" class="hilkka-lines"><li class="muted">…</li></ul>
+        <p class="fineprint"><a href="#" id="suomi-card-more" data-i18n="hilkka.more">Full breakdown →</a></p>
+      </section>
       <section>
         <h2 data-i18n="news.title">News pressure</h2>
+        <p class="fineprint" data-i18n="news.explainer">How loudly world media talks about the strait — 24h article volume vs. a calm-2025 baseline; feeds the index's News component.</p>
         <div id="news-meta" class="fineprint"></div>
         <ul id="headlines" class="headlines"></ul>
       </section>
@@ -92,6 +103,19 @@
 
   <dialog id="methodology-dialog"><div id="methodology-body"></div>
     <form method="dialog"><button data-i18n="methodology.close">Close</button></form>
+  </dialog>
+
+  <dialog id="welcome-dialog">
+    <h2 data-i18n="welcome.title">What is this?</h2>
+    <p data-i18n="welcome.intro">salmi watches the Strait of Hormuz: is it open, and what does that mean — for oil markets, and for everyday life in Finland.</p>
+    <p><strong data-i18n="welcome.seriousTitle">Take seriously:</strong> <span data-i18n="welcome.serious">Daily transit counts (IMF PortWatch, official), Finnish prices (Statistics Finland, pörssisähkö), Brent daily closes.</span></p>
+    <p><strong data-i18n="welcome.editorialTitle">Take as editorial:</strong> <span data-i18n="welcome.editorial">The Passability Index and its bands are our own published formula on top of that data — versioned and fully explained under "How is this computed?".</span></p>
+    <p><strong data-i18n="welcome.bestEffortTitle">Take as best-effort:</strong> <span data-i18n="welcome.bestEffort">Live ship AIS (terrestrial receivers — currently largely dark in the Gulf, mid-crisis), flights (OpenSky), news volume (GDELT, rate-limited), intraday quotes (unofficial). Gaps are shown, never hidden.</span></p>
+    <p class="fineprint" data-i18n="welcome.footer">A one-person civic hobby project on free public data. Not navigation or trading advice.</p>
+    <div class="welcome-actions">
+      <button type="button" id="welcome-dontshow" data-i18n="welcome.dontShow">Don't show again</button>
+      <form method="dialog"><button data-i18n="welcome.close">Close</button></form>
+    </div>
   </dialog>
 
   <script type="module" src="/src/main.ts"></script>

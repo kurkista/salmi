@@ -4,12 +4,13 @@
 import { t, fmtNum, fmtDate } from '../i18n';
 
 interface HilkkaData {
-  persona: { tankLiters: number; kmPerMonth: number; litersPer100km: number; kwhPerMonth: number; preCrisisMonth: string };
+  persona: { tankLiters: number; kmPerMonth: number; litersPer100km: number; kwhPerMonth: number; heatoilLiters: number; preCrisisMonth: string };
   fuel: {
     e95: number | null; diesel: number | null; heatoil: number | null;
     e95Pre: number | null; dieselPre: number | null; heatoilPre: number | null;
     dataMonthTs: number | null;
     tankExtraEur: number | null; monthlyDrivingExtraEur: number | null; dieselTankExtraEur: number | null;
+    heatoilFillExtraEur: number | null;
   };
   electricity: { nowCkwh: number | null; todayAvgCkwh: number | null; avg30dCkwh: number | null; monthlyCostEur: number | null };
   brent: { now: number | null; preCrisisAvg: number | null; pct: number | null };
@@ -30,7 +31,19 @@ export async function init(): Promise<void> {
     drawer.toggleAttribute('hidden', !open);
     tab.setAttribute('aria-expanded', String(open));
   });
+  document.getElementById('suomi-card-more')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    openDrawer();
+  });
   await refresh();
+}
+
+function openDrawer(): void {
+  const tab = document.getElementById('hilkka-tab')!;
+  const drawer = document.getElementById('hilkka-drawer')!;
+  drawer.removeAttribute('hidden');
+  tab.setAttribute('aria-expanded', 'true');
+  drawer.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
 export function onMetric(m: { metric: string }): void {
@@ -57,8 +70,7 @@ function costSpan(v: number, digits = 2, unit = '€'): string {
   return `<span class="${cls}">${eur(v, digits)} ${unit}</span>`;
 }
 
-function renderLines(d: HilkkaData): void {
-  const ul = document.getElementById('hilkka-lines')!;
+function buildLines(d: HilkkaData): string[] {
   const lines: string[] = [];
   const f = d.fuel;
 
@@ -81,6 +93,13 @@ function renderLines(d: HilkkaData): void {
       delta: costSpan(f.dieselTankExtraEur),
     }));
   }
+  if (f.heatoil !== null && f.heatoilFillExtraEur !== null) {
+    lines.push(t('hilkka.heatoil', {
+      price: fmtNum(f.heatoil, 2),
+      liters: d.persona.heatoilLiters,
+      delta: costSpan(f.heatoilFillExtraEur),
+    }));
+  }
   if (d.electricity.nowCkwh !== null) {
     lines.push(t('hilkka.elec', {
       now: fmtNum(d.electricity.nowCkwh, 1),
@@ -92,14 +111,22 @@ function renderLines(d: HilkkaData): void {
       pct: `${d.brent.pct >= 0 ? '+' : ''}${fmtNum(d.brent.pct, 0)}`,
     }));
   }
-  ul.innerHTML = lines.length
+  return lines;
+}
+
+function renderLines(d: HilkkaData): void {
+  const lines = buildLines(d);
+  const html = lines.length
     ? lines.map((l) => `<li>${l}</li>`).join('')
     : `<li class="muted">${t('status.noData')}</li>`;
+
+  document.getElementById('hilkka-lines')!.innerHTML = html;
+  document.getElementById('suomi-card-lines')!.innerHTML = html;
 
   document.getElementById('hilkka-persona')!.textContent = t('hilkka.persona', {
     liters: d.persona.litersPer100km,
     km: fmtNum(d.persona.kmPerMonth, 0),
-    month: f.dataMonthTs ? fmtDate(f.dataMonthTs) : '…',
+    month: d.fuel.dataMonthTs ? fmtDate(d.fuel.dataMonthTs) : '…',
   });
 }
 

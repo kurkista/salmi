@@ -1,5 +1,6 @@
 // panels/status.ts — left panel: band chip, HPI gauge + component breakdown,
-// PortWatch transit sparkline, live counters, gate-crossing ticker.
+// PortWatch transit sparkline, live gate-crossing ticker. Ship/flight/news/
+// markets summary numbers live in panels/layers.ts (the "Live layers" card).
 import type * as echarts from 'echarts/core';
 import type { AppState, HpiSnapshot } from '../types';
 import { t, fmtTime, fmtDate, fmtNum } from '../i18n';
@@ -10,16 +11,10 @@ const BASELINE = 91.5; // keep in sync with server/config.js HPI.baselineTransit
 const COMPONENT_KEYS = ['T', 'N', 'P', 'O'] as const;
 
 let gauge: echarts.ECharts;
-let transitsToday = { in: 0, out: 0 };
-let state: AppState;
 
 export async function init(s: AppState): Promise<void> {
-  state = s;
-  transitsToday = s.transitsToday;
-
   gauge = makeGauge(document.getElementById('hpi-gauge')!);
   renderHpi(s.hpi);
-  renderCounters();
 
   if (s.ais.disabled) {
     const ticker = document.getElementById('ticker')!;
@@ -29,6 +24,10 @@ export async function init(s: AppState): Promise<void> {
     const ticker = document.getElementById('ticker')!;
     ticker.innerHTML = `<li class="muted">${t('ais.noCoverage')}</li>`;
   }
+
+  const pw = s.metrics.pw_total;
+  const pwEl = document.getElementById('pw-latest');
+  if (pwEl && pw) pwEl.textContent = t('status.pwLatest', { date: fmtDate(pw.ts), value: fmtNum(pw.value, 0) });
 
   const transits = await getTransits(30);
   const spark = makeSparkline(document.getElementById('transit-spark')!, transits.portwatch, BASELINE);
@@ -40,8 +39,6 @@ export function onHpi(snapshot: HpiSnapshot): void {
 }
 
 export function onTransit(tr: { ts: number; mmsi: number; name: string | null; dir: 'in' | 'out' }): void {
-  transitsToday[tr.dir]++;
-  renderCounters();
   const ticker = document.getElementById('ticker')!;
   ticker.querySelector('.muted')?.remove();
   const li = document.createElement('li');
@@ -75,21 +72,6 @@ function renderHpi(snapshot: HpiSnapshot | null): void {
     }
     list.appendChild(li);
   }
-}
-
-function renderCounters(): void {
-  const el = document.getElementById('counters')!;
-  const pw = state.metrics.pw_total;
-  const u = state.uniqueLargeToday;
-  const counters: Array<[string | number, string]> = [
-    [state.vessels.length, t('counters.vesselsNow')],
-    [`${transitsToday.in}/${transitsToday.out}`, t('counters.transitsToday')],
-    [pw ? fmtNum(pw.value, 0) : '–', t('counters.pwLatest', { date: pw ? fmtDate(pw.ts) : '–' })],
-    [u.tankers + u.cargo, t('counters.uniqueLarge')],
-  ];
-  el.innerHTML = counters
-    .map(([num, lbl]) => `<div class="counter"><div class="num">${num}</div><div class="lbl">${lbl}</div></div>`)
-    .join('');
 }
 
 function escapeHtml(s: string): string {

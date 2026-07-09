@@ -6,25 +6,29 @@ import { initMap, updateVessels, updateFlights } from './map';
 import * as status from './panels/status';
 import * as markets from './panels/markets';
 import * as hilkka from './panels/hilkka';
+import * as layers from './panels/layers';
+import * as welcome from './panels/welcome';
 import { initMethodology } from './panels/methodology';
 
 async function boot() {
   await initI18n();
   const state = await getState();
 
-  initMap(document.getElementById('map')!, state.vessels, (state as any).flights?.aircraft ?? []);
+  initMap(document.getElementById('map')!, state.vessels, state.flights?.aircraft ?? []);
   await status.init(state);
+  layers.init(state);
   await markets.init(state);
   await hilkka.init();
   initMethodology();
+  welcome.init();
 
   connectSSE({
-    vessels: updateVessels,
-    transit: status.onTransit,
+    vessels: (delta) => { updateVessels(delta); layers.onVessels(delta); },
+    transit: (tr) => { status.onTransit(tr); layers.onTransit(tr); },
     hpi: status.onHpi,
-    metric: (m) => { markets.onMetric(m); hilkka.onMetric(m); },
-    headline: markets.onHeadline,
-    flights: updateFlights,
+    metric: (m) => { markets.onMetric(m); hilkka.onMetric(m); layers.onMetric(m); },
+    headline: (h) => { markets.onHeadline(h); layers.onHeadline(); },
+    flights: (data) => { updateFlights(data); layers.onFlights(data); },
   });
 }
 

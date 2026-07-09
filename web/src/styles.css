@@ -52,11 +52,12 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
 .band-SEVERELY_DISRUPTED { border-color: var(--status-serious); }
 .band-EFFECTIVELY_CLOSED { border-color: var(--status-critical); }
 
-.lang-toggle {
+.lang-toggle, .info-btn {
   background: none; border: 1px solid var(--border); color: var(--ink-2);
   border-radius: 6px; padding: 5px 10px; font-size: 13px; cursor: pointer;
 }
-.lang-toggle:hover { border-color: var(--muted); }
+.lang-toggle:hover, .info-btn:hover { border-color: var(--muted); }
+.info-btn { font-size: 15px; line-height: 1; padding: 4px 9px; }
 
 #layout {
   display: grid;
@@ -93,6 +94,19 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
 .counter { border: 1px solid var(--grid); border-radius: 8px; padding: 8px 10px; }
 .counter .num { font-size: 20px; font-weight: 700; color: var(--ink); }
 .counter .lbl { font-size: 11px; color: var(--muted); }
+
+.layers { list-style: none; margin: 0; padding: 0; }
+.layer-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--grid); }
+.layer-row:last-child { border-bottom: none; }
+.layer-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex: none; }
+.dot-good { background: var(--status-good); }
+.dot-warning { background: var(--status-warning); }
+.dot-serious { background: var(--status-serious); }
+.dot-muted { background: var(--muted); }
+.layer-body { min-width: 0; flex: 1; }
+.layer-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+.layer-nums { font-size: 12px; color: var(--ink-2); }
+.layer-detail { font-size: 11.5px; color: var(--muted); }
 
 .ticker { list-style: none; margin: 0; padding: 0; font-size: 13px; }
 .ticker li { padding: 4px 0; border-bottom: 1px solid var(--grid); }
@@ -138,6 +152,10 @@ dialog button {
   background: none; border: 1px solid var(--border); color: var(--ink);
   border-radius: 6px; padding: 6px 14px; cursor: pointer; margin-top: 10px;
 }
+dialog p { font-size: 14px; line-height: 1.5; }
+#welcome-dialog h2 { color: var(--ink); margin-top: 0; }
+.welcome-actions { display: flex; justify-content: flex-end; gap: 10px; }
+#welcome-dontshow { border-color: var(--muted); }
 
 /* Hilkka & Suomi drawer */
 .hilkka-tab {
@@ -167,6 +185,12 @@ dialog button {
 .hilkka-lines .cost-up { color: var(--status-serious); font-weight: 600; }
 .hilkka-lines .cost-down { color: var(--status-good); font-weight: 600; }
 .suomi { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+#suomi-card {
+  border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+#suomi-card .hilkka-lines { font-size: 13.5px; }
 
 /* MapLibre popup, dark */
 .maplibregl-popup-content {

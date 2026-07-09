@@ -23,7 +23,11 @@ export async function init(state: AppState): Promise<void> {
 
   const list = document.getElementById('headlines')!;
   list.innerHTML = '';
-  for (const h of state.headlines) list.appendChild(headlineLi(h));
+  if (state.headlines.length === 0) {
+    list.innerHTML = `<li class="muted">${t('news.empty')}</li>`;
+  } else {
+    for (const h of state.headlines) list.appendChild(headlineLi(h));
+  }
 }
 
 export function onMetric(m: { metric: string; ts: number; value: number }): void {
@@ -39,6 +43,7 @@ export function onMetric(m: { metric: string; ts: number; value: number }): void
 
 export function onHeadline(h: Headline): void {
   const list = document.getElementById('headlines')!;
+  list.querySelector('.muted')?.remove();
   list.prepend(headlineLi(h));
   while (list.children.length > 20) list.lastElementChild!.remove();
 }

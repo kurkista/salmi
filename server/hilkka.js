@@ -31,6 +31,7 @@ export function computeHilkka(now = Date.now()) {
   // fuel deltas (€/L) vs the pre-crisis month
   const dE95 = e95 && e95Pre !== null ? e95.value - e95Pre : null;
   const dDiesel = diesel && dieselPre !== null ? diesel.value - dieselPre : null;
+  const dHeatoil = heatoil && heatoilPre !== null ? heatoil.value - heatoilPre : null;
 
   // Brent now vs the pre-crisis month's average
   const preStart = Date.parse(`${HILKKA.preCrisisMonth}-01`);
@@ -67,6 +68,7 @@ export function computeHilkka(now = Date.now()) {
       monthlyDrivingExtraEur:
         dE95 !== null ? dE95 * (HILKKA.kmPerMonth / 100) * HILKKA.litersPer100km : null,
       dieselTankExtraEur: dDiesel !== null ? dDiesel * HILKKA.tankLiters : null,
+      heatoilFillExtraEur: dHeatoil !== null ? dHeatoil * HILKKA.heatoilLiters : null,
     },
     electricity: {
       nowCkwh: elecNow,

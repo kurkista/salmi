@@ -1,0 +1,87 @@
+# News relay — GDELT refuses fly.io's shared egress IPv4 at the connection
+# level ("fetch failed", not just 429s), so the direct in-app poller rarely
+# succeeds there. GitHub Actions runner IPs rotate widely and generally aren't
+# blocked, so this workflow fetches the same GDELT queries from the runner and
+# relays the raw JSON to the app's ingest endpoint.
+name: news-relay
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # every 30 minutes
+  workflow_dispatch:
+    inputs:
+      send_calm:
+        description: 'Also send the calm-2025 baseline query (normally only sent ~03:00-03:29 UTC)'
+        type: boolean
+        default: false
+
+env:
+  SALMI_URL: https://salmi.fly.dev
+  GDELT_QUERY: '"strait of hormuz"'
+  GDELT_UA: 'salmi-monitor/0.1 (+https://github.com/kurkista/salmi)'
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch GDELT volume (30d) + tone (2d) + headlines, build payload
+        id: build
+        run: |
+          set -euo pipefail
+          enc_query=$(python3 -c "import urllib.parse,os; print(urllib.parse.quote(os.environ['GDELT_QUERY']))")
+          base="https://api.gdeltproject.org/api/v2/doc/doc?query=${enc_query}"
+
+          fetch_json() {
+            local url="$1" out="$2"
+            local body
+            body=$(curl -fsS --max-time 30 -H "User-Agent: ${GDELT_UA}" "$url")
+            if ! echo "$body" | python3 -m json.tool > /dev/null 2>&1; then
+              echo "::warning::non-JSON response for $url (rate limited?) — skipping"
+              return 1
+            fi
+            echo "$body" > "$out"
+          }
+
+          got_volume=0 got_tone=0 got_articles=0 got_calm=0
+
+          if fetch_json "${base}&mode=timelinevolraw&timespan=30d&format=json" volume.json; then got_volume=1; fi
+          sleep 12
+          if fetch_json "${base}&mode=timelinetone&timespan=2d&format=json" tone.json; then got_tone=1; fi
+          sleep 12
+          if fetch_json "${base}&mode=artlist&maxrecords=20&sort=datedesc&format=json" articles.json; then got_articles=1; fi
+
+          hour_min=$(date -u +%H:%M)
+          send_calm="${{ github.event.inputs.send_calm }}"
+          if [ "$send_calm" = "true" ] || [ "$hour_min" \> "03:00" -a "$hour_min" \< "03:30" ]; then
+            sleep 12
+            if fetch_json "${base}&mode=timelinevolraw&startdatetime=20250101000000&enddatetime=20251231235959&format=json" calm.json; then got_calm=1; fi
+          fi
+
+          if [ "$got_volume" = 0 ] && [ "$got_tone" = 0 ] && [ "$got_articles" = 0 ] && [ "$got_calm" = 0 ]; then
+            echo "::error::all GDELT queries failed — nothing to relay this run"
+            exit 1
+          fi
+
+          jq -n \
+            --slurpfile volume <(if [ "$got_volume" = 1 ]; then cat volume.json; else echo null; fi) \
+            --slurpfile tone <(if [ "$got_tone" = 1 ]; then cat tone.json; else echo null; fi) \
+            --slurpfile articles <(if [ "$got_articles" = 1 ]; then cat articles.json; else echo null; fi) \
+            --slurpfile calm <(if [ "$got_calm" = 1 ]; then cat calm.json; else echo null; fi) \
+            '{volume: $volume[0], tone: $tone[0], articles: $articles[0], calm: $calm[0]}' \
+            > payload.json
+
+          echo "stored=$got_volume,$got_tone,$got_articles,$got_calm" >> "$GITHUB_OUTPUT"
+
+      - name: POST payload to the news ingest endpoint
+        run: |
+          set -euo pipefail
+          http_code=$(curl -sS -o response.json -w '%{http_code}' \
+            -X POST "${SALMI_URL}/api/ingest/gdelt" \
+            -H "Authorization: Bearer ${{ secrets.INGEST_TOKEN }}" \
+            -H 'Content-Type: application/json' \
+            --data @payload.json)
+          echo "response: $(cat response.json)"
+          if [ "$http_code" -ge 300 ]; then
+            echo "::error::ingest endpoint returned HTTP $http_code"
+            exit 1
+          fi

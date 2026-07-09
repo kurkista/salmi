@@ -15,6 +15,8 @@ import { aisStatus } from './ais.js';
 import { bus } from './bus.js';
 import { computeHilkka } from './hilkka.js';
 import { flightsSnapshot } from './pollers/opensky.js';
+import { storeGdeltPayload } from './pollers/gdelt.js';
+import { gatherAndCompute } from './hpi.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const events = JSON.parse(readFileSync(path.join(root, 'data/events.json'), 'utf8'));
@@ -117,6 +119,24 @@ export function startHttp({ store }) {
   app.get('/api/events', (req, res) => res.json(events));
 
   app.get('/api/hilkka', (req, res) => res.json(computeHilkka()));
+
+  // News relay ingest: the news-relay GitHub Action fetches GDELT from runner
+  // IPs (GDELT refuses fly's shared egress IPs) and pushes the raw JSON here.
+  app.post('/api/ingest/gdelt', express.json({ limit: '4mb' }), (req, res) => {
+    const token = process.env.INGEST_TOKEN;
+    if (!token) return res.status(503).json({ error: 'ingest not configured' });
+    if (req.headers.authorization !== `Bearer ${token}`) {
+      return res.status(401).json({ error: 'unauthorized' });
+    }
+    try {
+      const stored = storeGdeltPayload(req.body ?? {});
+      gatherAndCompute();
+      console.log(`[ingest] gdelt relay stored: ${stored.join(', ')}`);
+      res.json({ ok: true, stored });
+    } catch (err) {
+      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+    }
+  });
 
   app.get('/api/methodology', (req, res) => {
     res.type('text/markdown').send(readFileSync(path.join(root, 'METHODOLOGY.md'), 'utf8'));

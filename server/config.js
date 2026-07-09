@@ -186,6 +186,7 @@ export const HILKKA = {
   kmPerMonth: 1500, // average Finnish car does ~17–18k km/year
   litersPer100km: 7.0, // mixed driving, petrol car
   kwhPerMonth: 200, // apartment household without electric heating
+  heatoilLiters: 1000, // a typical annual heating-oil fill-up
   // Pre-crisis reference month: February 2026, the last calm month before
   // the March escalation (StatFin 11xx: diesel 1.80 €/L, E95 1.76 €/L).
   preCrisisMonth: '2026-02',

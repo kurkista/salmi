@@ -56,6 +56,7 @@ export interface AppState {
   events: HormuzEvent[];
   ais: { disabled: boolean; connected: boolean; lastMsgTs: number | null; msgCount: number; streaming: boolean };
   jobs: Record<string, { lastSuccess: number | null; lastError: number | null; lastErrorMsg: string | null }>;
+  flights: { ts: number; aircraft: { icao: string; cs: string | null; lon: number; lat: number; alt: number | null; trk: number | null }[] };
 }
 
 export type SeriesData = [number, number][];
