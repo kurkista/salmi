@@ -13,6 +13,7 @@ import {
 import { jobStatus } from './scheduler.js';
 import { aisStatus } from './ais.js';
 import { bus } from './bus.js';
+import { computeHilkka } from './hilkka.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const events = JSON.parse(readFileSync(path.join(root, 'data/events.json'), 'utf8'));
@@ -112,6 +113,8 @@ export function startHttp({ store }) {
   });
 
   app.get('/api/events', (req, res) => res.json(events));
+
+  app.get('/api/hilkka', (req, res) => res.json(computeHilkka()));
 
   app.get('/api/methodology', (req, res) => {
     res.type('text/markdown').send(readFileSync(path.join(root, 'METHODOLOGY.md'), 'utf8'));

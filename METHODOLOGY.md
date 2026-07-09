@@ -20,7 +20,7 @@ Each component is normalized to 0–100 where **100 = pre-crisis normal** and
 | | Component | Input | Normalization |
 |---|---|---|---|
 | **T** | Transit flow (45%) | [IMF PortWatch](https://portwatch.imf.org/pages/cb5856222a5b4105adc6ee7e880a1730) daily transit calls for the Strait of Hormuz (chokepoint6), 7-day moving average | `clamp(7dma / 91.5) × 100`. Baseline 91.5 = PortWatch 2025 full-year average, queried 2026-07-09. |
-| **N** | News pressure (20%) | [GDELT](https://www.gdeltproject.org) 24 h article volume for `"strait of hormuz"` vs its trailing 30-day median | `100 × (1 − clamp(log₁₀(vol/median)))` — 10× the median news volume scores 0. |
+| **N** | News pressure (20%) | [GDELT](https://www.gdeltproject.org) 24 h article volume for `"strait of hormuz"` vs the **median daily volume of calendar 2025** (the last pre-crisis year; the median absorbs the June 2025 scare) | `100 × (1 − clamp(log₁₀(vol/calm)))` — 10× calm-year volume scores 0. A trailing median was rejected: it drifts up during a sustained crisis and reads as calm. |
 | **P** | Market odds (20%) | [Polymarket](https://polymarket.com) "Strait of Hormuz traffic returns to normal by Jul 31" (resolves against PortWatch) | `p(normal) × 100`. For a "will it close" market the probability is inverted. |
 | **O** | Oil stress (15%) | Brent 20-day realized volatility, annualized, from daily closes (Yahoo Finance, FRED fallback) | `100 × (1 − clamp((σ − 0.30) / 0.70))` — σ ≤ 30% is a calm market, σ ≥ 100% is 2020-grade panic. |
 

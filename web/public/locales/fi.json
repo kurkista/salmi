@@ -37,5 +37,19 @@
   "methodology.close": "Sulje",
   "footer.sources": "Data:",
   "footer.disclaimer": "Ei navigointi- eikä sijoitusneuvontaa.",
-  "baseline": "2025 vertailutaso"
+  "baseline": "2025 vertailutaso",
+  "hilkka.tab": "Hilkka & Suomi",
+  "hilkka.title": "Mitä tämä tarkoittaa Hilkalle",
+  "hilkka.national": "Suomi, kansallinen taso",
+  "hilkka.tank": "Bensa (E95) maksaa {price} €/l — {liters} litran tankillinen maksaa {delta} enemmän kuin helmikuussa ennen kriisiä",
+  "hilkka.driving": "{km} km kuukaudessa ajavalle bensakulut ovat {delta} kuukaudessa suuremmat",
+  "hilkka.diesel": "Diesel maksaa {price} €/l — tankillinen {delta} vs. helmikuu",
+  "hilkka.elec": "Pörssisähkö juuri nyt: {now} c/kWh (30 pv keskiarvo {avg} c/kWh) — Suomen sähköntuotannon rakenne tekee Hormuz-kytköksestä heikon; seuraamme korrelaatiota, emme väitä sitä",
+  "hilkka.brent": "Brent-öljy on {pct} % suhteessa kriisiä edeltävään helmikuun keskiarvoon",
+  "hilkka.persona": "Hilkka ajaa bensa-autolla ({liters} l/100 km, {km} km/kk). Pumppuhinnat: Tilastokeskuksen kuukausikeskiarvot, viimeisin {month}.",
+  "hilkka.lag": "Nopeat indikaattorit reagoivat minuuteissa; kansalliset tilastot laahaavat kuukausia — ja niihin vaikuttaa moni muukin asia.",
+  "suomi.neste": "Neste, 30 pv",
+  "suomi.finnair": "Finnair, 30 pv",
+  "suomi.eurusd": "USD per EUR (EKP)",
+  "suomi.cpi": "Inflaatio v/v ({month})"
 }

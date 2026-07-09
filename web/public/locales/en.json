@@ -37,5 +37,19 @@
   "methodology.close": "Close",
   "footer.sources": "Data:",
   "footer.disclaimer": "Not navigation or trading advice.",
-  "baseline": "2025 baseline"
+  "baseline": "2025 baseline",
+  "hilkka.tab": "Hilkka & Suomi",
+  "hilkka.title": "What this means for Hilkka",
+  "hilkka.national": "Finland, national level",
+  "hilkka.tank": "Petrol (E95) is {price} €/L — filling a {liters} L tank costs {delta} vs pre-crisis February",
+  "hilkka.driving": "Driving {km} km/month costs {delta} per month extra in petrol",
+  "hilkka.diesel": "Diesel is {price} €/L — a tank costs {delta} vs February",
+  "hilkka.elec": "Spot electricity right now: {now} c/kWh (30-day average {avg} c/kWh) — Finland's power mix makes the Hormuz link weak; we chart it to test the correlation",
+  "hilkka.brent": "Brent crude is {pct} % vs its pre-crisis February average",
+  "hilkka.persona": "Hilkka drives a petrol car ({liters} L/100 km, {km} km/month). Pump prices: Statistics Finland monthly averages, latest {month}.",
+  "hilkka.lag": "Fast proxies react in minutes; national statistics lag months — and many other things move them too.",
+  "suomi.neste": "Neste, 30 days",
+  "suomi.finnair": "Finnair, 30 days",
+  "suomi.eurusd": "USD per EUR (ECB)",
+  "suomi.cpi": "Inflation y/y ({month})"
 }

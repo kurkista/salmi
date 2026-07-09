@@ -12,7 +12,7 @@ const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
 /**
  * @param {{
  *   T?: {value: number, ts: number} | null,          // PortWatch 7-day avg transits
- *   N?: {vol24h: number, median30d: number, ts: number} | null,
+ *   N?: {vol24h: number, baseline: number, ts: number} | null, // vs calm-2025 median
  *   P?: {p: number, direction: 'normal'|'closed', ts: number} | null,
  *   O?: {sigma: number, ts: number} | null,           // annualized 20d realized vol
  * }} inputs
@@ -32,11 +32,11 @@ export function computeHPI(inputs, now, prevBand = null) {
     };
   }
 
-  if (fresh(inputs.N, 'N', now) && inputs.N.median30d > 0) {
-    const r = inputs.N.vol24h / inputs.N.median30d;
+  if (fresh(inputs.N, 'N', now) && inputs.N.baseline > 0 && inputs.N.vol24h > 0) {
+    const r = inputs.N.vol24h / inputs.N.baseline;
     components.N = {
       score: 100 * (1 - clamp(Math.log10(Math.max(r, 1)) / HPI.newsLog10Span, 0, 1)),
-      raw: { vol24h: inputs.N.vol24h, median30d: inputs.N.median30d, ratio: r },
+      raw: { vol24h: inputs.N.vol24h, calmBaseline: inputs.N.baseline, ratio: r },
       ts: inputs.N.ts,
     };
   }
@@ -114,13 +114,13 @@ export function gatherAndCompute(now = Date.now()) {
   const prev = latestHpiSnapshot();
   const t = latestSeries('pw_7dma');
   const vol = latestSeries('gdelt_vol24h');
-  const med = latestSeries('gdelt_median30d');
+  const base = latestSeries('gdelt_base_daily');
   const p = latestSeries('poly_p');
   const sigma = latestSeries('brent_sigma20');
 
   const snapshot = computeHPI({
     T: t ? { value: t.value, ts: t.ts } : null,
-    N: vol && med ? { vol24h: vol.value, median30d: med.value, ts: vol.ts } : null,
+    N: vol && base ? { vol24h: vol.value, baseline: base.value, ts: vol.ts } : null,
     P: p ? { p: p.value, direction: POLYMARKET.markets[0]?.direction ?? 'normal', ts: p.ts } : null,
     O: sigma ? { sigma: sigma.value, ts: sigma.ts } : null,
   }, now, prev?.band ?? null);

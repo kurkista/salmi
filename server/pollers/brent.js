@@ -5,32 +5,13 @@
 import { BRENT } from '../config.js';
 import { putSeries, seriesSince, latestSeries } from '../db.js';
 import { bus } from '../bus.js';
-
-const yahooHeaders = { 'User-Agent': BRENT.userAgent };
-
-async function yahooChart(params) {
-  const url = `${BRENT.yahooUrl}${encodeURIComponent(BRENT.yahooSymbol)}?${params}`;
-  const res = await fetch(url, { headers: yahooHeaders, signal: AbortSignal.timeout(20_000) });
-  if (!res.ok) throw new Error(`yahoo ${res.status}`);
-  const data = await res.json();
-  const result = data?.chart?.result?.[0];
-  if (!result) throw new Error('yahoo: empty chart result');
-  return result;
-}
+import { yahooChart, dailyCloses } from './yahoo.js';
 
 /** Daily close history (~1y) + recompute realized volatility. */
 export async function pollBrentHistory() {
   try {
-    const r = await yahooChart('range=1y&interval=1d');
-    const ts = r.timestamp || [];
-    const closes = r.indicators?.quote?.[0]?.close || [];
-    for (let i = 0; i < ts.length; i++) {
-      if (typeof closes[i] === 'number') {
-        // normalize to the UTC date so re-fetches overwrite the same row
-        const day = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-        putSeries('brent_usd', Date.parse(day), closes[i]);
-      }
-    }
+    const r = await yahooChart(BRENT.yahooSymbol, 'range=1y&interval=1d');
+    for (const [ts, v] of dailyCloses(r)) putSeries('brent_usd', ts, v);
   } catch (err) {
     console.warn('[brent] yahoo history failed, trying FRED:', err instanceof Error ? err.message : err);
     await fredHistory();
@@ -53,7 +34,7 @@ async function fredHistory() {
 
 /** Latest tradable price, hourly. Decoration — daily closes are the backbone. */
 export async function pollBrentQuote() {
-  const r = await yahooChart('range=1d&interval=15m');
+  const r = await yahooChart(BRENT.yahooSymbol, 'range=1d&interval=15m');
   const price = r.meta?.regularMarketPrice;
   const t = r.meta?.regularMarketTime;
   if (typeof price !== 'number') throw new Error('yahoo: no regularMarketPrice');

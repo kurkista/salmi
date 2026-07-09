@@ -5,6 +5,7 @@ import { connectSSE } from './sse';
 import { initMap, updateVessels } from './map';
 import * as status from './panels/status';
 import * as markets from './panels/markets';
+import * as hilkka from './panels/hilkka';
 import { initMethodology } from './panels/methodology';
 
 async function boot() {
@@ -14,13 +15,14 @@ async function boot() {
   initMap(document.getElementById('map')!, state.vessels);
   await status.init(state);
   await markets.init(state);
+  await hilkka.init();
   initMethodology();
 
   connectSSE({
     vessels: updateVessels,
     transit: status.onTransit,
     hpi: status.onHpi,
-    metric: markets.onMetric,
+    metric: (m) => { markets.onMetric(m); hilkka.onMetric(m); },
     headline: markets.onHeadline,
   });
 }

@@ -165,7 +165,7 @@ export function latestHpiSnapshot() {
 export function prune(now = Date.now()) {
   const cutoff = now - 90 * 24 * 3600_000;
   db.prepare(
-    "DELETE FROM series WHERE metric IN ('brent_intraday','vessels_in_strait','unique_large_24h') AND ts < ?"
+    "DELETE FROM series WHERE metric IN ('brent_intraday','vessels_in_strait','unique_large_24h','elec_spot') AND ts < ?"
   ).run(cutoff);
   db.prepare(`
     DELETE FROM headlines WHERE id NOT IN (

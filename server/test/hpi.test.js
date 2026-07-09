@@ -7,7 +7,7 @@ import { HPI } from '../config.js';
 const now = Date.now();
 const freshInputs = () => ({
   T: { value: 34, ts: now - 3600_000 },                       // 34/91.5 → 37.2
-  N: { vol24h: 500, median30d: 100, ts: now },                // 5× median → 100·(1−log10 5) ≈ 30.1
+  N: { vol24h: 500, baseline: 100, ts: now },                 // 5× calm → 100·(1−log10 5) ≈ 30.1
   P: { p: 0.045, direction: /** @type {const} */ ('normal'), ts: now }, // 4.5
   O: { sigma: 0.65, ts: now },                                // (0.65−0.3)/0.7 → 50
 });

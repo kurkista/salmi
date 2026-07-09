@@ -140,6 +140,51 @@ export const PORTWATCH = {
   pollMs: 6 * 3600_000,
 };
 
+// ---------------------------------------------------------------------------
+// Hilkka & Suomi layer (M2) — what the strait means in Finland
+// ---------------------------------------------------------------------------
+export const ELECTRICITY = {
+  // Finnish spot electricity, c/kWh incl. VAT, 15-min resolution, free, no key.
+  url: 'https://api.porssisahko.net/v2/latest-prices.json',
+  pollMs: 3 * 3600_000,
+};
+
+export const STATFIN = {
+  // Statistics Finland PxWeb API (free, no key).
+  // 11xx = average prices of liquid fuels, monthly, €/L, 2002M01→
+  // 122p = annual change of the Consumer Price Index, monthly.
+  fuelUrl: 'https://statfin.stat.fi/PxWeb/api/v1/en/StatFin/khi/11xx.px',
+  cpiUrl: 'https://statfin.stat.fi/PxWeb/api/v1/en/StatFin/khi/122p.px',
+  fuelCodes: { pump_e95: '0700200', pump_diesel: '0700100', pump_heatoil: '0400500' },
+  pollMs: 24 * 3600_000, // data changes monthly; a daily check is plenty
+};
+
+export const STOCKS = {
+  // Hormuz-sensitive Helsinki tickers: Neste (refiner), Finnair (jet fuel +
+  // Asian routes). Daily closes via the same Yahoo chart API as Brent.
+  symbols: { stock_neste: 'NESTE.HE', stock_finnair: 'FIA1S.HE' },
+  pollMs: 60 * 60_000,
+};
+
+export const FX = {
+  // ECB reference rate USD per EUR (oil is priced in USD; a weak euro
+  // amplifies pump prices in Finland).
+  url: 'https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?lastNObservations=120&format=csvdata',
+  pollMs: 6 * 3600_000,
+};
+
+export const HILKKA = {
+  // "Hilkka" is an average Finnish driver/household used to translate the
+  // strait into everyday euros. Constants are deliberately ordinary:
+  tankLiters: 50, // a typical full tank
+  kmPerMonth: 1500, // average Finnish car does ~17–18k km/year
+  litersPer100km: 7.0, // mixed driving, petrol car
+  kwhPerMonth: 200, // apartment household without electric heating
+  // Pre-crisis reference month: February 2026, the last calm month before
+  // the March escalation (StatFin 11xx: diesel 1.80 €/L, E95 1.76 €/L).
+  preCrisisMonth: '2026-02',
+};
+
 export const SSE = {
   pingMs: 25_000, // keeps fly's proxy from cutting idle connections
 };
@@ -160,4 +205,12 @@ export const PUBLIC_METRICS = [
   'vessels_in_strait',
   'unique_large_24h',
   'hpi',
+  'elec_spot',
+  'pump_e95',
+  'pump_diesel',
+  'pump_heatoil',
+  'stock_neste',
+  'stock_finnair',
+  'eurusd',
+  'fi_cpi_yoy',
 ];
