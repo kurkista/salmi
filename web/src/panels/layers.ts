@@ -82,7 +82,7 @@ function shipsRow(): LayerRow {
   if (ais.disabled) {
     status = 'muted'; detail = t('ais.disabled');
   } else if (ais.connected && !ais.streaming) {
-    status = 'serious'; detail = t('ais.noCoverage');
+    status = 'serious'; detail = t('layers.shipsDark');
   } else if (ais.streaming) {
     status = 'good'; detail = t('layers.live');
   } else {

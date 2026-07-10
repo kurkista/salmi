@@ -77,6 +77,11 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
   font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em;
   color: var(--muted); margin: 0 0 8px; font-weight: 600;
 }
+.submarket-label {
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin: 0 0 4px; font-weight: 600;
+}
+.submarket-label-2 { margin-top: 14px; }
 
 .gauge { height: 190px; }
 .components { list-style: none; margin: 0; padding: 0; font-size: 13px; }
@@ -177,7 +182,7 @@ dialog p { font-size: 14px; line-height: 1.5; }
   padding: 16px;
 }
 #timeline-drawer { max-width: 1100px; margin: 0 auto; }
-#timeline-chart { width: 100%; }
+#timeline-chart { width: 100%; height: 340px; }
 .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 1100px; margin: 0 auto; }
 @media (max-width: 980px) { .drawer-grid { grid-template-columns: 1fr; } }
 .drawer h2 {

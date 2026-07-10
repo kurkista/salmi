@@ -3,12 +3,16 @@
 // carry identity.
 import * as echarts from 'echarts/core';
 import { LineChart, BarChart, GaugeChart } from 'echarts/charts';
-import { GridComponent, TooltipComponent, MarkLineComponent } from 'echarts/components';
+import { GridComponent, TooltipComponent, MarkLineComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
-import { t, fmtDate, fmtNum } from './i18n';
+import { t, fmtDate, fmtTime, fmtNum } from './i18n';
 import type { SeriesData, HormuzEvent } from './types';
 
-echarts.use([LineChart, BarChart, GaugeChart, GridComponent, TooltipComponent, MarkLineComponent, CanvasRenderer]);
+echarts.use([
+  LineChart, BarChart, GaugeChart,
+  GridComponent, TooltipComponent, MarkLineComponent, LegendComponent,
+  CanvasRenderer,
+]);
 
 const INK2 = '#c3c2b7';
 const MUTED = '#898781';
@@ -135,61 +139,37 @@ export function bindResize(...charts: echarts.ECharts[]) {
   window.addEventListener('resize', () => charts.forEach((c) => c.resize()), { passive: true });
 }
 
-export interface TimelineRow {
+export interface UnifiedTimelineRow {
   label: string;
-  data: SeriesData;
   color: string;
-  valueFormatter?: (v: number) => string;
+  /** [ts, rawValue] — rawValue already unit-converted (e.g. odds ×100 for %). */
+  points: SeriesData;
+  fmt: (v: number) => string;
 }
 
 /**
- * Stacked mini-charts sharing one time axis (linked axisPointer + tooltip),
- * each keeping its own real-unit y-axis — deliberately not normalized onto a
- * shared scale, so the numbers stay legible without a hover.
+ * One shared chart: every series min-max normalized to a common 0–100 index
+ * (so wildly different units can overlay legibly), with the real value+unit
+ * restored in the tooltip on hover. A flat (constant) series maps to a flat
+ * midline rather than dividing by zero. Legend items toggle series on/off.
  */
-export function makeTimeline(el: HTMLElement, rows: TimelineRow[], events: HormuzEvent[], lang: string) {
-  const rowH = 84;
-  const gap = 14;
-  const top0 = 6;
-  const bottomAxisH = 20;
-  el.style.height = `${top0 + rows.length * (rowH + gap) + bottomAxisH}px`;
-
+export function makeUnifiedTimeline(el: HTMLElement, rows: UnifiedTimelineRow[], events: HormuzEvent[], lang: string) {
   const chart = echarts.init(el);
-  const isLast = (i: number) => i === rows.length - 1;
+  const fmtByName = new Map(rows.map((r) => [r.label, r.fmt]));
 
-  chart.setOption({
-    axisPointer: { link: [{ xAxisIndex: 'all' }] },
-    tooltip: {
-      trigger: 'axis',
-      backgroundColor: '#1a1a19', borderColor: GRID, textStyle: { color: INK2, fontSize: 11 },
-      axisPointer: { type: 'cross', label: { backgroundColor: '#383835' } },
-    },
-    grid: rows.map((_, i) => ({
-      left: 100, right: 16, top: top0 + i * (rowH + gap), height: rowH,
-    })),
-    xAxis: rows.map((_, i) => ({
-      type: 'time', gridIndex: i, ...axisBase,
-      splitLine: { show: false },
-      axisLabel: { show: isLast(i), color: MUTED, fontSize: 10 },
-      axisLine: { show: isLast(i), lineStyle: { color: GRID } },
-    })),
-    yAxis: rows.map((r, i) => ({
-      type: 'value', scale: true, gridIndex: i,
-      ...axisBase,
-      splitNumber: 2,
+  const series = rows.map((r, i) => {
+    const values = r.points.map((p) => p[1]);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const span = max - min;
+    const data = r.points.map(([ts, v]) => [ts, span > 0 ? ((v - min) / span) * 100 : 50, v]);
+    return {
       name: r.label,
-      nameLocation: 'middle',
-      nameGap: 70,
-      nameTextStyle: { color: INK2, fontSize: 11, align: 'left' },
-    })),
-    series: rows.map((r, i) => ({
       type: 'line',
-      data: r.data,
-      xAxisIndex: i, yAxisIndex: i,
+      data,
       showSymbol: false,
-      lineStyle: { color: r.color, width: 1.6 },
+      lineStyle: { color: r.color, width: 1.8 },
       itemStyle: { color: r.color },
-      areaStyle: { color: r.color, opacity: 0.08 },
       ...(i === 0 ? {
         markLine: {
           symbol: 'none',
@@ -205,7 +185,38 @@ export function makeTimeline(el: HTMLElement, rows: TimelineRow[], events: Hormu
           data: events.map((e) => ({ xAxis: Date.parse(e.ts), name: lang === 'fi' ? e.fi : e.en })),
         },
       } : {}),
-    })),
+    };
+  });
+
+  chart.setOption({
+    color: rows.map((r) => r.color),
+    legend: {
+      top: 0, textStyle: { color: INK2, fontSize: 11 },
+      itemWidth: 14, itemHeight: 8, inactiveColor: '#484846',
+    },
+    grid: { left: 8, right: 16, top: 34, bottom: 26 },
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: '#1a1a19', borderColor: GRID, textStyle: { color: INK2, fontSize: 11 },
+      axisPointer: { type: 'cross', label: { backgroundColor: '#383835' } },
+      formatter: (params: any) => {
+        const list = Array.isArray(params) ? params : [params];
+        if (list.length === 0) return '';
+        const head = `${fmtDate(list[0].value[0])} ${fmtTime(list[0].value[0])}`;
+        const lines = list.map((p: any) => {
+          const fmt = fmtByName.get(p.seriesName);
+          const raw = p.value[2];
+          return `${p.marker}${p.seriesName}: <strong>${fmt ? fmt(raw) : raw}</strong>`;
+        });
+        return [head, ...lines].join('<br/>');
+      },
+    },
+    xAxis: { type: 'time', ...axisBase, splitLine: { show: false } },
+    yAxis: {
+      type: 'value', min: 0, max: 100, splitNumber: 4,
+      ...axisBase, axisLabel: { show: false },
+    },
+    series,
   } as any);
   return chart;
 }

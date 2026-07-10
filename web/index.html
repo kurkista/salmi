@@ -50,12 +50,11 @@
 
     <aside id="right" class="panel">
       <section>
-        <h2 data-i18n="markets.brentTitle">Brent crude (USD/bbl)</h2>
+        <h2 data-i18n="markets.title">Markets</h2>
+        <div class="submarket-label" data-i18n="markets.brentTitle">Brent crude (USD/bbl)</div>
         <div id="brent-now" class="bignum">–</div>
         <div id="brent-chart" class="chart"></div>
-      </section>
-      <section>
-        <h2 data-i18n="markets.oddsTitle">Prediction market</h2>
+        <div class="submarket-label submarket-label-2" data-i18n="markets.oddsTitle">Prediction market</div>
         <div id="poly-chip" class="odds-chip">–</div>
         <p class="fineprint" id="poly-desc" data-i18n="markets.oddsDesc">Polymarket: traffic returns to normal by Jul 31</p>
       </section>
@@ -80,7 +79,7 @@
 
   <div id="timeline-drawer" class="drawer" hidden>
     <h2 data-i18n="timeline.title">Timeline</h2>
-    <p class="fineprint" data-i18n="timeline.explainer">Every series we hold real history for, stacked on a shared time axis so you can eyeball what moves together. Real units per row — hover for exact values. Dashed lines mark the same hand-curated events as the Brent chart. Ships/flights history only started accumulating on launch day, so those rows are short for now.</p>
+    <p class="fineprint" data-i18n="timeline.explainer">Every series we hold real history for, overlaid on one 0–100 index so you can see what moves together — hover any line for its real value and unit, click a legend entry to hide it. Dashed lines mark the same hand-curated events as the Brent chart. Ships/flights history only started accumulating on launch day, so those two are short for now.</p>
     <div id="timeline-chart"></div>
   </div>
 
