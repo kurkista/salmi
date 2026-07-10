@@ -1,7 +1,7 @@
 {
-  "name": "salmi",
-  "version": "0.1.0",
-  "description": "salmi — is the Strait of Hormuz open? A transparent, live passability monitor.",
+  "name": "tutka",
+  "version": "0.2.0",
+  "description": "tutka — a civic/OSINT threat-monitoring platform for Finland. Nordic/Baltic tension, information environment, and more, one domain at a time.",
   "type": "module",
   "license": "MIT",
   "engines": {

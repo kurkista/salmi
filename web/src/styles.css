@@ -1,31 +1,44 @@
-/* salmi — dark-only dashboard. Palette follows the validated reference
-   instance (dataviz skill): dark surface #1a1a19, series blue #3987e5,
-   tanker yellow #c98500, status palette for HPI bands. */
+/* tutka — dark-first civic monitoring dashboard. Shares its token grammar
+   (ink/paper tiers, 3/8 radius scale, accent-tinted focus ring) with the
+   kurkista/Nuuski design system family, but its own calmer hue: graphite +
+   teal instead of void-black + alarm red — a radar/instrument-panel mood,
+   not a surveillance-ops one. Inter carries UI/body; ui-monospace is
+   reserved for numeric readouts (gauge values, big numbers, the brand mark)
+   for that instrument-panel feel. */
 :root {
-  --page: #0d0d0d;
-  --surface: #1a1a19;
-  --ink: #ffffff;
-  --ink-2: #c3c2b7;
-  --muted: #898781;
-  --grid: #2c2c2a;
-  --baseline: #383835;
-  --border: rgba(255, 255, 255, 0.10);
+  --page: #14181a;
+  --surface: #1c2124;
+  --ink: #eef0ee;
+  --ink-2: #b7c0bd;
+  --muted: #7c8985;
+  --grid: #2a3134;
+  --baseline: #3a4245;
+  --border: rgba(255, 255, 255, 0.08);
 
-  --series-blue: #3987e5;
-  --tanker: #c98500;
-  --cargo: #3987e5;
-  --other: #898781;
+  --accent: #4fa6a6;
+  --series-blue: #5b8dbe;
+  --tanker: #c98f4a;
+  --cargo: #5b8dbe;
+  --other: #7c8985;
 
-  --status-good: #0ca30c;
-  --status-warning: #fab219;
-  --status-serious: #ec835a;
-  --status-critical: #d03b3b;
+  --status-good: #4c9a6b;
+  --status-warning: #d6a24a;
+  --status-serious: #c97f5b;
+  --status-critical: #c25454;
 
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+  --radius: 6px;
+  --radius-lg: 10px;
+
+  font-family: var(--font-ui);
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-2); }
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 3px; border-radius: var(--radius);
+}
 
 #topbar {
   display: flex; align-items: center; gap: 16px;
@@ -33,14 +46,14 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
   background: var(--surface);
 }
 .brand { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.brand-name { font-weight: 700; font-size: 20px; color: var(--ink); letter-spacing: 0.02em; }
+.brand-name { font-family: var(--font-mono); font-weight: 600; font-size: 19px; color: var(--ink); letter-spacing: 0.01em; }
 .brand-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .band-chip {
   margin-left: auto;
   display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border);
-  font-weight: 600; font-size: 14px; color: var(--ink);
+  font-family: var(--font-mono); font-weight: 500; font-size: 13px; color: var(--ink);
 }
 .band-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); }
 /* Nordic (domain 1) + Information Environment (domain 3) bands — both use
@@ -130,7 +143,7 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
   border-radius: 6px; padding: 4px 11px; font-size: 12px; cursor: pointer;
 }
 .view-btn:hover, .range-btn:hover { border-color: var(--muted); }
-.view-btn.active, .range-btn.active { border-color: var(--series-blue); color: var(--ink); }
+.view-btn.active, .range-btn.active { border-color: var(--accent); color: var(--ink); }
 #timeline-view { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 18px; }
 #timeline-view .fineprint { margin: 0 0 12px; max-width: 900px; }
 #timeline-chart { width: 100%; height: 520px; }
@@ -160,7 +173,7 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
   display: flex; justify-content: space-between; gap: 8px;
   padding: 4px 0; border-bottom: 1px solid var(--grid);
 }
-.components .val { color: var(--ink); font-variant-numeric: tabular-nums; }
+.components .val { color: var(--ink); font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .components .stale { color: var(--muted); font-style: italic; }
 
 .spark { height: 120px; }
@@ -168,7 +181,7 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
 
 .counters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
 .counter { border: 1px solid var(--grid); border-radius: 8px; padding: 8px 10px; }
-.counter .num { font-size: 20px; font-weight: 700; color: var(--ink); }
+.counter .num { font-family: var(--font-mono); font-size: 19px; font-weight: 600; color: var(--ink); }
 .counter .lbl { font-size: 11px; color: var(--muted); }
 
 .layers { list-style: none; margin: 0; padding: 0; }
@@ -190,11 +203,11 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
 .ticker .dir-out { color: var(--series-blue); }
 .ticker time { color: var(--muted); font-size: 11px; margin-right: 6px; }
 
-.bignum { font-size: 30px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.bignum { font-family: var(--font-mono); font-size: 28px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
 .bignum .delta-up { color: var(--status-critical); font-size: 15px; } /* oil up = bad news here */
 .bignum .delta-down { color: var(--status-good); font-size: 15px; }
 
-.odds-chip { font-size: 26px; font-weight: 700; color: var(--ink); }
+.odds-chip { font-family: var(--font-mono); font-size: 24px; font-weight: 600; color: var(--ink); }
 
 .headlines { list-style: none; margin: 0; padding: 0; font-size: 13px; }
 .headlines li { padding: 6px 0; border-bottom: 1px solid var(--grid); }
@@ -223,7 +236,7 @@ dialog {
 dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 #methodology-body h1, #methodology-body h2, #methodology-body h3 { color: var(--ink); }
 #methodology-body code { background: var(--page); padding: 1px 4px; border-radius: 4px; }
-#methodology-body a { color: var(--series-blue); }
+#methodology-body a { color: var(--accent); }
 dialog button {
   background: none; border: 1px solid var(--border); color: var(--ink);
   border-radius: 6px; padding: 6px 14px; cursor: pointer; margin-top: 10px;
