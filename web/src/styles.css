@@ -75,10 +75,48 @@ html, body { margin: 0; height: 100%; background: var(--page); color: var(--ink-
 .lang-toggle:hover, .info-btn:hover { border-color: var(--muted); }
 .info-btn { font-size: 15px; line-height: 1; padding: 4px 9px; }
 
+#dashboard-view { padding: 24px; max-width: 1100px; margin: 0 auto; }
+#synthesis-panel {
+  border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.02); margin-bottom: 20px;
+}
+#synthesis-panel h2 { margin: 0 0 8px; font-size: 15px; color: var(--ink); }
+#domain-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+}
+.domain-card {
+  text-align: left; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; cursor: pointer; color: var(--ink-2);
+  display: flex; flex-direction: column; gap: 8px; font-family: inherit;
+}
+.domain-card:hover { border-color: var(--muted); }
+.domain-card-top { display: flex; align-items: center; justify-content: space-between; }
+.domain-num { font-size: 12px; color: var(--muted); }
+.domain-status { font-size: 11px; padding: 2px 8px; border-radius: 999px; }
+.domain-status-live { background: rgba(12, 163, 12, 0.15); color: var(--status-good); }
+.domain-status-scouted { background: rgba(137, 135, 129, 0.15); color: var(--muted); }
+.domain-name { font-size: 15px; font-weight: 600; color: var(--ink); margin: 0; }
+.domain-summary { font-size: 13px; color: var(--muted); margin: 0; }
+
+#domain-view { display: flex; flex-direction: column; height: calc(100vh - 49px); }
+#domain-view[hidden] { display: none; }
+.domain-back {
+  flex: none; text-align: left; padding: 8px 16px; background: var(--surface);
+  border: none; border-bottom: 1px solid var(--border); color: var(--ink-2);
+  cursor: pointer; font-size: 13px; font-family: inherit;
+}
+.domain-back:hover { color: var(--ink); }
+.domain-content { flex: 1; min-height: 0; overflow-y: auto; }
+.domain-content[hidden] { display: none; }
+#infoenv-layout { display: grid; grid-template-columns: 340px 1fr; gap: 0; }
+#infoenv-layout .panel { padding: 16px; border-right: 1px solid var(--border); }
+#infoenv-layout .panel:last-child { border-right: none; }
+#placeholder-body { padding: 20px; max-width: 760px; margin: 0 auto; }
+
 #layout {
   display: grid;
   grid-template-columns: 340px 1fr 380px;
-  height: calc(100vh - 49px - 37px);
+  height: 100%;
 }
 #center { display: flex; flex-direction: column; min-height: 0; background: #111; }
 #center-toolbar {

@@ -54,6 +54,8 @@ export interface Headline {
   title: string;
   url: string;
   source: string | null;
+  /** Only present on the SSE 'headline' event, not on /api/state's per-module lists. */
+  module?: string;
 }
 
 export interface DomainEvent {

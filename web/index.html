@@ -10,8 +10,8 @@
 <body>
   <header id="topbar">
     <div class="brand">
-      <span class="brand-name">salmi</span>
-      <span class="brand-sub" data-i18n="app.subtitle">Strait of Hormuz passability monitor</span>
+      <span class="brand-name">tutka</span>
+      <span class="brand-sub" data-i18n="app.subtitle">Nordic/Baltic tension monitor</span>
     </div>
     <div id="band-chip" class="band-chip band-none">
       <span class="band-dot"></span>
@@ -21,56 +21,90 @@
     <button id="lang-toggle" class="lang-toggle" title="Kieli / Language">FI</button>
   </header>
 
-  <main id="layout">
-    <aside id="left" class="panel">
-      <section>
-        <h2 data-i18n="status.title">Passability</h2>
-        <div id="hpi-gauge" class="gauge"></div>
-        <ul id="hpi-components" class="components"></ul>
-        <p class="fineprint">
-          <a href="#" id="methodology-link" data-i18n="methodology.link">How is this computed?</a>
-        </p>
-      </section>
-      <section>
-        <h2 data-i18n="layers.title">Live layers</h2>
-        <ul id="layers-list" class="layers"></ul>
-      </section>
-    </aside>
+  <main id="dashboard-view">
+    <section id="synthesis-panel">
+      <h2 data-i18n="dashboard.synthesisTitle">Synthesis</h2>
+      <p id="synthesis-coverage" class="fineprint"></p>
+    </section>
+    <div id="domain-cards"></div>
+  </main>
 
-    <div id="center">
-      <div id="center-toolbar">
-        <div class="view-toggle" role="tablist">
-          <button id="view-timeline-btn" class="view-btn active" data-i18n="timeline.title">Timeline</button>
-          <button id="view-map-btn" class="view-btn" data-i18n="nav.map">Map</button>
+  <main id="domain-view" hidden>
+    <button id="domain-back-btn" class="domain-back">← <span data-i18n="dashboard.back">Back to dashboard</span></button>
+
+    <div id="domain-content-1" class="domain-content" hidden>
+      <div id="layout">
+        <aside id="left" class="panel">
+          <section>
+            <h2 data-i18n="status.title">Tension</h2>
+            <div id="hpi-gauge" class="gauge"></div>
+            <ul id="hpi-components" class="components"></ul>
+            <p class="fineprint">
+              <a href="#" id="methodology-link" data-i18n="methodology.link">How is this computed?</a>
+            </p>
+          </section>
+          <section>
+            <h2 data-i18n="layers.title">Live layers</h2>
+            <ul id="layers-list" class="layers"></ul>
+          </section>
+        </aside>
+
+        <div id="center">
+          <div id="center-toolbar">
+            <div class="view-toggle" role="tablist">
+              <button id="view-timeline-btn" class="view-btn active" data-i18n="timeline.title">Timeline</button>
+              <button id="view-map-btn" class="view-btn" data-i18n="nav.map">Map</button>
+            </div>
+            <div id="range-toggle" class="range-toggle">
+              <button class="range-btn" data-days="1" data-i18n="timeline.range24h">24H</button>
+              <button class="range-btn active" data-days="7" data-i18n="timeline.range7d">7D</button>
+              <button class="range-btn" data-days="30" data-i18n="timeline.range30d">30D</button>
+            </div>
+          </div>
+          <div id="timeline-view">
+            <p class="fineprint" data-i18n="timeline.explainer">Every series we hold real history for, overlaid on one 0–100 index so you can see what moves together — hover any line for its real value and unit, click a legend entry to hide it. Dashed lines mark hand-curated events. Ships/flights history only started accumulating on launch day, so those two are short for now.</p>
+            <div id="timeline-chart"></div>
+          </div>
+          <div id="map-view" hidden>
+            <div id="map"></div>
+          </div>
         </div>
-        <div id="range-toggle" class="range-toggle">
-          <button class="range-btn" data-days="1" data-i18n="timeline.range24h">24H</button>
-          <button class="range-btn active" data-days="7" data-i18n="timeline.range7d">7D</button>
-          <button class="range-btn" data-days="30" data-i18n="timeline.range30d">30D</button>
-        </div>
-      </div>
-      <div id="timeline-view">
-        <p class="fineprint" data-i18n="timeline.explainer">Every series we hold real history for, overlaid on one 0–100 index so you can see what moves together — hover any line for its real value and unit, click a legend entry to hide it. Dashed lines mark the same hand-curated events as the Brent chart. Ships/flights history only started accumulating on launch day, so those two are short for now.</p>
-        <div id="timeline-chart"></div>
-      </div>
-      <div id="map-view" hidden>
-        <div id="map"></div>
+
+        <aside id="right" class="panel">
+          <section id="suomi-card">
+            <h2>🇫🇮 <span data-i18n="hilkka.tab">Finland impact</span></h2>
+            <ul id="suomi-card-lines" class="hilkka-lines"><li class="muted">…</li></ul>
+            <p class="fineprint"><a href="#" id="suomi-card-more" data-i18n="hilkka.more">Full breakdown →</a></p>
+          </section>
+          <section>
+            <h2 data-i18n="news.title">News pressure</h2>
+            <p class="fineprint" data-i18n="news.explainer">How loudly world media talks about Finland/Baltic-Russia military and security tension — 24h article volume vs. a calm-2025 baseline; feeds the index's V component.</p>
+            <div id="news-meta" class="fineprint"></div>
+            <ul id="headlines" class="headlines"></ul>
+          </section>
+        </aside>
       </div>
     </div>
 
-    <aside id="right" class="panel">
-      <section id="suomi-card">
-        <h2>🇫🇮 <span data-i18n="hilkka.tab">Finland impact</span></h2>
-        <ul id="suomi-card-lines" class="hilkka-lines"><li class="muted">…</li></ul>
-        <p class="fineprint"><a href="#" id="suomi-card-more" data-i18n="hilkka.more">Full breakdown →</a></p>
-      </section>
-      <section>
-        <h2 data-i18n="news.title">News pressure</h2>
-        <p class="fineprint" data-i18n="news.explainer">How loudly world media talks about the strait — 24h article volume vs. a calm-2025 baseline; feeds the index's News component.</p>
-        <div id="news-meta" class="fineprint"></div>
-        <ul id="headlines" class="headlines"></ul>
-      </section>
-    </aside>
+    <div id="domain-content-3" class="domain-content" hidden>
+      <div id="infoenv-layout">
+        <section class="panel">
+          <h2 data-i18n="domain.3.name">Information environment</h2>
+          <div id="infoenv-gauge" class="gauge"></div>
+          <ul id="infoenv-components" class="components"></ul>
+          <p class="fineprint" id="infoenv-band"></p>
+        </section>
+        <section class="panel">
+          <h2 data-i18n="news.title">News pressure</h2>
+          <p class="fineprint" data-i18n="domain.3.explainer">How loudly world media talks about Finland/Baltic disinformation and influence-operation narratives — 24h article volume vs. a calm-2025 baseline.</p>
+          <ul id="infoenv-headlines" class="headlines"></ul>
+        </section>
+      </div>
+    </div>
+
+    <div id="domain-content-placeholder" class="domain-content" hidden>
+      <div id="placeholder-body" class="panel"></div>
+    </div>
   </main>
 
   <div id="bottom-tabs">

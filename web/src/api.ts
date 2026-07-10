@@ -23,3 +23,9 @@ export const getMethodology = async (): Promise<string> => {
   if (!res.ok) throw new Error(`methodology: ${res.status}`);
   return res.text();
 };
+
+export const getRoadmap = async (): Promise<string> => {
+  const res = await fetch('/api/roadmap');
+  if (!res.ok) throw new Error(`roadmap: ${res.status}`);
+  return res.text();
+};
