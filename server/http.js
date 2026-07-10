@@ -18,14 +18,16 @@ import { computeHilkka } from './hilkka.js';
 import { flightsSnapshot } from './pollers/opensky.js';
 import { storeGdeltPayload } from './pollers/gdelt.js';
 import { gatherAndCompute } from './hpi.js';
+import { gatherAndComputeNordic } from './indices/nordic.js';
 import { gatherAndComputeInfoEnv } from './indices/infoenv.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-/** @type {{hormuz: any[], infoenv: any[]}} */
+/** @type {{hormuz: any[], nordic: any[], infoenv: any[]}} */
 const events = JSON.parse(readFileSync(path.join(root, 'data/events.json'), 'utf8'));
 
-/** hormuz's index_snapshots row (value/band/components/version) mapped back
- * to the historical {hpi, band, ...} shape existing consumers expect. */
+/** Dormant Hormuz's index_snapshots row (value/band/...) mapped back to the
+ * historical {hpi, band, ...} shape — kept for /api/export's historical data,
+ * not used for the live band chip anymore (see latestNordicSnapshot below). */
 function latestHpiSnapshot() {
   const row = latestIndexSnapshot('hormuz');
   if (!row) return undefined;
@@ -55,7 +57,7 @@ export function startHttp({ store }) {
     for (const res of clients) res.write(': ping\n\n');
   }, SSE.pingMs).unref?.();
 
-  for (const event of ['vessels', 'transit', 'hpi', 'infoenv_index', 'metric', 'headline', 'flights']) {
+  for (const event of ['vessels', 'transit', 'nordic_index', 'infoenv_index', 'metric', 'headline', 'flights']) {
     bus.on(event, (data) => broadcast(event, data));
   }
 
@@ -65,8 +67,8 @@ export function startHttp({ store }) {
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
     });
-    const hello = latestHpiSnapshot();
-    res.write(`event: hello\ndata: ${JSON.stringify({ ts: Date.now(), hpi: hello?.hpi ?? null, band: hello?.band ?? null })}\n\n`);
+    const hello = latestIndexSnapshot('nordic');
+    res.write(`event: hello\ndata: ${JSON.stringify({ ts: Date.now(), value: hello?.value ?? null, band: hello?.band ?? null })}\n\n`);
     clients.add(res);
     req.on('close', () => clients.delete(res));
   });
@@ -94,13 +96,12 @@ export function startHttp({ store }) {
       jobs: jobStatus(),
       metrics,
       modules: {
-        hormuz: {
-          hpi: latestHpiSnapshot() ?? null,
+        nordic: {
+          index: latestIndexSnapshot('nordic') ?? null,
           vessels: store.snapshot(),
-          transitsToday: store.transitsToday,
           uniqueLargeToday: store.uniqueLargeToday(),
-          headlines: recentHeadlines(20, 'hormuz'),
-          events: events.hormuz,
+          headlines: recentHeadlines(20, 'nordic'),
+          events: events.nordic,
           flights: flightsSnapshot(),
           ais: aisStatus(),
         },
@@ -157,7 +158,8 @@ export function startHttp({ store }) {
     if (!cfg) return res.status(404).json({ error: 'unknown module' });
     try {
       const stored = storeGdeltPayload(req.body ?? {}, Date.now(), cfg);
-      if (cfg.module === 'hormuz') gatherAndCompute();
+      if (cfg.module === 'hormuz') gatherAndCompute(); // dormant, kept functional
+      if (cfg.module === 'nordic') gatherAndComputeNordic();
       if (cfg.module === 'infoenv') gatherAndComputeInfoEnv();
       console.log(`[ingest] gdelt relay (${cfg.module}) stored: ${stored.join(', ')}`);
       res.json({ ok: true, stored });
@@ -170,20 +172,30 @@ export function startHttp({ store }) {
     res.type('text/markdown').send(readFileSync(path.join(root, 'METHODOLOGY.md'), 'utf8'));
   });
 
+  // Domains 2/4/5/6 have no built deep-dive yet; the frontend fetches this
+  // once and splits it client-side on its "## Domain N —" headings.
+  app.get('/api/roadmap', (req, res) => {
+    res.type('text/markdown').send(readFileSync(path.join(root, 'ROADMAP.md'), 'utf8'));
+  });
+
   // Daily aggregates bundle — fetched by .github/workflows/export.yml so the
   // public repo keeps a durable copy of the data (the static-fallback parachute).
   app.get('/api/export', (req, res) => {
     const since = Date.now() - 400 * 24 * 3600_000;
     /** @type {Record<string, any>} */
     const daily = {};
-    for (const m of ['brent_usd', 'brent_sigma20', 'pw_total', 'pw_tanker', 'pw_cargo', 'pw_7dma', 'hpi']) {
+    for (const m of [
+      'nordic_index', 'gdelt_nordic_vol24h', 'infoenv_index',
+      'brent_usd', 'brent_sigma20', 'pw_total', 'pw_tanker', 'pw_cargo', 'pw_7dma', 'hpi',
+    ]) {
       daily[m] = seriesSince(m, since).map((r) => [r.ts, r.value]);
     }
     res.json({
       generated: new Date().toISOString(),
       daily,
       vesselsDaily: vesselsDailySince(new Date(since).toISOString().slice(0, 10)),
-      latestHpi: latestHpiSnapshot() ?? null,
+      latestNordic: latestIndexSnapshot('nordic') ?? null,
+      latestHpi: latestHpiSnapshot() ?? null, // dormant, kept for historical continuity
       headlines: recentHeadlines(100),
     });
   });

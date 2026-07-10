@@ -12,10 +12,13 @@ export const DB_PATH = process.env.DB_PATH || './dev.db';
 export const AIS = {
   url: 'wss://stream.aisstream.io/v0/stream',
   apiKey: process.env.AISSTREAM_API_KEY || '',
-  // One box covering the Strait of Hormuz narrows, its Persian Gulf approach
-  // and the Gulf of Oman approach incl. Fujairah anchorage.
+  // Gulf of Finland + northern Baltic: the Helsinki-Tallinn corridor, the
+  // St. Petersburg/Primorsk/Ust-Luga shadow-fleet tanker route past Gogland,
+  // and the Åland Sea approach — the highest-traffic, highest-tension slice,
+  // not the whole Baltic. Widen toward Gotland/Bornholm later if domain 2
+  // (hybrid/grey-zone, cable sabotage) wants the same feed.
   // AISStream format: [[lat1, lon1], [lat2, lon2]]
-  boundingBox: [[24.5, 54.5], [27.5, 58.0]],
+  boundingBox: [[58.5, 21.0], [60.7, 30.5]],
   messageTypes: ['PositionReport', 'ShipStaticData'],
   // Subscription must be sent within 3 s of the socket opening (AISStream rule).
   reconnectMinMs: 1_000,
@@ -25,10 +28,14 @@ export const AIS = {
 };
 
 // ---------------------------------------------------------------------------
-// Vessel store + transit detection at the narrows
+// Vessel store + transit detection
 // ---------------------------------------------------------------------------
 export const VESSELS = {
-  maxEntries: 6_000, // hard cap; Gulf bbox realistically holds 1–3k AIS targets
+  // Watch this after a few days of real Baltic traffic: the Gulf of Finland
+  // is one of the busiest AIS corridors in the world (40+ daily Helsinki-
+  // Tallinn ferry crossings alone, plus dense cargo/tanker traffic) — likely
+  // denser than the old Hormuz box even at a similar bbox area.
+  maxEntries: 6_000, // hard cap; revisit if the Baltic box saturates this
   staleMinutes: 40, // drop vessels not heard from in this long
   sweepMs: 5 * 60_000,
   broadcastThrottleMs: 5_000, // dirty-vessel deltas to browsers at most this often
@@ -36,8 +43,14 @@ export const VESSELS = {
 };
 
 export const GATE = {
+  // No single narrow chokepoint meridian exists in the open Baltic the way
+  // Hormuz's narrows has one — disabled for the Nordic repoint rather than
+  // forcing fake geometry onto the Gulf of Finland. Kept (not deleted) for a
+  // real future chokepoint, e.g. the Danish straits.
+  enabled: false,
   // Gate meridian across the narrows between Musandam (Oman) and Iran.
   // The IMO traffic separation scheme lanes pass roughly 26.3–26.7°N here.
+  // Hormuz-specific values below are irrelevant while enabled=false.
   lon: 56.5,
   latMin: 25.9,
   latMax: 26.9,
@@ -48,7 +61,9 @@ export const GATE = {
   minSogKn: 3, // slower fixes don't confirm a crossing (excludes drifters)
   maxCrossingHours: 6, // side flip older than this = reappearing ship, not a transit
   cooldownHours: 2, // per-vessel minimum between counted transits
-  // AIS ship type codes 70–79 = cargo, 80–89 = tanker.
+  // AIS ship type codes 70–79 = cargo, 80–89 = tanker. Reused by
+  // vessels.js's _isLarge()/_isTanker() regardless of `enabled` — these are
+  // ship-type classification thresholds, not gate geometry.
   shipTypeMin: 70,
   shipTypeMax: 89,
 };
@@ -126,6 +141,37 @@ export const INFOENV = {
 };
 
 // ---------------------------------------------------------------------------
+// Nordic tension Index — domain 1's real content (State & military tension),
+// rebuilt for Finland/Baltic after retiring Hormuz as the flagship domain.
+// Same two-honest-signal shape as INFOENV: no clean daily official series
+// exists for Nordic military tension the way PortWatch did for Hormuz, so
+// GDELT news pressure is the real anchor here, same as it is for domain 3.
+// See indices/nordic.js and METHODOLOGY.md.
+// ---------------------------------------------------------------------------
+export const NORDIC = {
+  version: 'nordic-v0',
+  weights: { V: 0.6, T: 0.4 },
+  // Higher score = calmer, same convention as HPI/INFOENV. Band names are
+  // domain-appropriate, not reused from either other domain's vocabulary.
+  bands: [
+    { min: 70, name: 'CALM' },
+    { min: 45, name: 'ELEVATED' },
+    { min: 20, name: 'HEIGHTENED' },
+    { min: 0, name: 'CRITICAL' },
+  ],
+  hysteresisPoints: 2,
+  newsLog10Span: 1,
+  toneCalm: 0,
+  toneExtreme: -8,
+  stalenessMs: {
+    V: 3 * 3600_000,
+    T: 24 * 3600_000,
+  },
+  recomputeMs: 5 * 60_000,
+  snapshotMs: 15 * 60_000,
+};
+
+// ---------------------------------------------------------------------------
 // Pollers
 // ---------------------------------------------------------------------------
 export const POLYMARKET = {
@@ -152,6 +198,8 @@ export const GDELT = {
   // query/series names/calm baseline. Add a new block here for a future domain
   // rather than duplicating pollers/gdelt.js.
   modules: {
+    // Dormant (not scheduled — see index.js) since Hormuz was retired as the
+    // flagship domain. Kept, not deleted, per "not delete, stop investing".
     hormuz: {
       module: 'hormuz',
       query: '"strait of hormuz"',
@@ -159,6 +207,19 @@ export const GDELT = {
       pollMs: 30 * 60_000,
       // Calm-period window for the N baseline: calendar year 2025, the last
       // pre-crisis year (the June 2025 scare is absorbed by using the median).
+      calmStart: '20250101000000',
+      calmEnd: '20251231235959',
+    },
+    // Domain 1's real query going forward: Finland/Baltic/NATO military and
+    // security tension with Russia — distinct from infoenv's disinformation
+    // query below. This wording is the single highest-leverage editorial
+    // call in the Nordic repoint; retune the keyword list once real volume
+    // is visible.
+    nordic: {
+      module: 'nordic',
+      query: '(Finland OR Baltic OR NATO) AND Russia AND (military OR troops OR incursion OR "air policing" OR "airspace violation" OR "border incident")',
+      seriesPrefix: 'gdelt_nordic_',
+      pollMs: 30 * 60_000,
       calmStart: '20250101000000',
       calmEnd: '20251231235959',
     },
@@ -250,8 +311,9 @@ export const OPENSKY = {
   statesUrl: 'https://opensky-network.org/api/states/all',
   clientId: process.env.OPENSKY_CLIENT_ID || '',
   clientSecret: process.env.OPENSKY_CLIENT_SECRET || '',
-  // Wider Gulf region: Iranian airspace closures and Gulf reroutes are the story.
-  bbox: { lamin: 23, lomin: 53, lamax: 28, lomax: 60 },
+  // Gulf of Finland/Baltic, widened a little for NATO Baltic Air Policing
+  // intercept tracks near Estonia and southern Finland approaches.
+  bbox: { lamin: 58.0, lomin: 20.5, lamax: 61.5, lomax: 31.0 },
   // Registered accounts get 4000 credits/day; this bbox costs ~2/call, so a
   // 2-min cadence uses ~1440/day. On HTTP 429 we sit out a few runs.
   pollMs: 2 * 60_000,
@@ -264,6 +326,8 @@ export const SSE = {
 
 // Whitelist of series metrics exposed via /api/series/:metric
 export const PUBLIC_METRICS = [
+  // Dormant Hormuz-market metrics, kept readable/exportable (historical data,
+  // not actively updated — see index.js for which jobs stopped being scheduled).
   'brent_usd',
   'brent_intraday',
   'brent_sigma20',
@@ -271,18 +335,23 @@ export const PUBLIC_METRICS = [
   'gdelt_vol24h',
   'gdelt_median30d',
   'gdelt_tone',
-  'gdelt_infoenv_vol24h',
-  'gdelt_infoenv_median30d',
-  'gdelt_infoenv_tone',
-  'infoenv_index',
   'pw_total',
   'pw_tanker',
   'pw_cargo',
   'pw_7dma',
-  'vessels_in_strait',
-  'unique_large_24h',
-  'flights_count',
   'hpi',
+  // Domain 1 (Nordic tension) and domain 3 (Information environment) — live.
+  'gdelt_nordic_vol24h',
+  'gdelt_nordic_median30d',
+  'gdelt_nordic_tone',
+  'nordic_index',
+  'gdelt_infoenv_vol24h',
+  'gdelt_infoenv_median30d',
+  'gdelt_infoenv_tone',
+  'infoenv_index',
+  'nordic_vessels_in_zone',
+  'nordic_unique_large_24h',
+  'flights_count',
   'elec_spot',
   'pump_e95',
   'pump_diesel',

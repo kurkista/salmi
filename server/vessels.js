@@ -1,14 +1,20 @@
 // @ts-check
-// vessels.js — in-memory vessel store + gate-line transit detection.
-// This is the hardest correctness problem in salmi; the rules are spelled out
-// in METHODOLOGY.md §Transit counting and every constant lives in config.js.
+// vessels.js — in-memory vessel store + (optional) gate-line transit
+// detection. Every constant lives in config.js.
 //
-// Gate logic in short: a large vessel (AIS type 70–89) gets a confirmed side
-// of the 56.5°E gate meridian only when it is >3 km away from it (hysteresis).
-// A confirmed WEST→EAST or EAST→WEST flip counts as one transit, if the vessel
-// was moving (sog ≥ 3 kn), the flip happened within 6 h, and the vessel hasn't
-// been counted in the last 2 h.
-import { GATE, VESSELS } from './config.js';
+// Gate logic in short (currently GATE.enabled=false — no single narrow
+// chokepoint meridian exists in the open Baltic the way Hormuz's narrows has
+// one; kept for a real future chokepoint): a large vessel (AIS type 70–89)
+// gets a confirmed side of the gate meridian only when it is >3 km away from
+// it (hysteresis). A confirmed side flip counts as one transit if the vessel
+// was moving (sog ≥ 3 kn), the flip happened within 6 h, and the vessel
+// hasn't been counted in the last 2 h.
+import { AIS, GATE, VESSELS } from './config.js';
+
+// Spoof/garbage-fix filter uses AIS.boundingBox padded by this margin (deg),
+// rather than its own hardcoded box — a bbox re-point (config-only) used to
+// silently break ingest because this filter didn't move with it.
+const BBOX_PAD_DEG = 0.5;
 
 /**
  * @typedef {{
@@ -63,8 +69,10 @@ export class VesselStore {
     const lon = pos.Longitude ?? meta.longitude;
     const sog = typeof pos.Sog === 'number' ? pos.Sog : null;
     if (typeof lat !== 'number' || typeof lon !== 'number') return;
-    // Spoofing / garbage filters: outside our bbox or implausibly fast.
-    if (lat < 24 || lat > 28 || lon < 54 || lon > 58.5) return;
+    // Spoofing / garbage filter: outside our bbox (padded) or implausibly fast.
+    const [[latMin, lonMin], [latMax, lonMax]] = AIS.boundingBox;
+    if (lat < latMin - BBOX_PAD_DEG || lat > latMax + BBOX_PAD_DEG ||
+        lon < lonMin - BBOX_PAD_DEG || lon > lonMax + BBOX_PAD_DEG) return;
     if (sog !== null && sog > VESSELS.maxPlausibleSogKn) return;
 
     const v = this._get(meta.MMSI, now);
@@ -79,7 +87,7 @@ export class VesselStore {
     if (!v.name && meta.ShipName) v.name = String(meta.ShipName).trim() || null;
 
     this._trackDailyPresence(v);
-    this._gate(v, now);
+    if (GATE.enabled) this._gate(v, now);
   }
 
   /** @param {any} meta @param {any} stat @param {number} now */
@@ -205,11 +213,12 @@ export class VesselStore {
     };
   }
 
-  /** Vessels currently inside the strait proper (for the hourly series). */
-  countInStrait() {
+  /** Vessels currently inside the monitored zone (for the hourly series). */
+  countInZone() {
+    const [[latMin, lonMin], [latMax, lonMax]] = AIS.boundingBox;
     let n = 0;
     for (const v of this.vessels.values()) {
-      if (v.lat >= 25.5 && v.lat <= 27.2 && v.lon >= 55.5 && v.lon <= 57.3) n++;
+      if (v.lat >= latMin && v.lat <= latMax && v.lon >= lonMin && v.lon <= lonMax) n++;
     }
     return n;
   }

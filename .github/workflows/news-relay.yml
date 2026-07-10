@@ -28,8 +28,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - module: hormuz
-            query: '"strait of hormuz"'
+          - module: nordic
+            query: '(Finland OR Baltic OR NATO) AND Russia AND (military OR troops OR incursion OR "air policing" OR "airspace violation" OR "border incident")'
           - module: infoenv
             query: '(Finland OR Estonia OR Latvia OR Lithuania OR Baltic) AND (disinformation OR propaganda OR "influence operation" OR "information operation")'
     env:

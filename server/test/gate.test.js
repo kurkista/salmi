@@ -1,7 +1,16 @@
 // @ts-check
+// Gate-crossing detection is disabled by default (GATE.enabled=false — no
+// single chokepoint meridian exists in the open Baltic the way Hormuz's
+// narrows has one). These tests exercise the retained logic in isolation by
+// re-enabling it and restoring the Hormuz bbox/geometry it was built against,
+// rather than deleting still-correct, still-useful test coverage.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { VesselStore } from '../vessels.js';
+import { GATE, AIS } from '../config.js';
+
+GATE.enabled = true;
+AIS.boundingBox = [[24.5, 54.5], [27.5, 58.0]];
 
 const t0 = Date.parse('2026-07-09T06:00:00Z');
 const MIN = 60_000;
