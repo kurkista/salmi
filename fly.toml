@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for salmi on 2026-07-09T13:36:30+03:00
+# fly.toml app configuration file for tutka
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'salmi'
+app = 'tutka'
 primary_region = 'arn'
 swap_size_mb = 256
 
@@ -11,11 +11,11 @@ swap_size_mb = 256
   dockerfile = 'Dockerfile'
 
 [env]
-  DB_PATH = '/data/salmi.db'
+  DB_PATH = '/data/tutka.db'
   PORT = '8080'
 
 [[mounts]]
-  source = 'salmi_data'
+  source = 'tutka_data'
   destination = '/data'
   initial_size = '1gb'
 

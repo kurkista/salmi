@@ -1,17 +1,12 @@
 # tutka
 
 **A civic/OSINT threat-monitoring platform for Finland.** *Tutka* is Finnish
-for "radar". It grew out of [salmi](https://github.com/kurkista/salmi), a
-single-purpose Strait of Hormuz passability monitor — that groundwork became
-the reusable engine (weighted-scoring index, GDELT poller pattern, live
-AIS/flight tracking) now pointed at what the platform is actually for:
-Finland/Russia and Nordic/Baltic tension.
-
-> **Note on naming:** the code, repo, and live URL are still `salmi` /
-> `salmi.fly.dev` at this stage — the rename to `tutka` is a deliberate,
-> separate decision (it changes a live production address) and hasn't
-> happened yet. This README already uses the new framing so the domain
-> taxonomy and docs don't lag behind the actual architecture work.
+for "radar". It grew out of `salmi`, a single-purpose Strait of Hormuz
+passability monitor — that groundwork became the reusable engine
+(weighted-scoring index, GDELT poller pattern, live AIS/flight tracking) now
+pointed at what the platform is actually for: Finland/Russia and
+Nordic/Baltic tension. The project (repo and live app) has since been renamed
+`tutka` to match.
 
 ## The six domains
 

@@ -193,7 +193,7 @@ export const GDELT = {
   // GDELT's per-IP quota is contested, so most requests 429 — we need chances.
   spacingMs: 10_000,
   headlineCount: 20,
-  userAgent: 'salmi-monitor/0.1 (+https://github.com/kurkista/salmi)',
+  userAgent: 'tutka-monitor/0.1 (+https://github.com/kurkista/tutka)',
   // One config block per monitored domain — same GDELT mechanism, different
   // query/series names/calm baseline. Add a new block here for a future domain
   // rather than duplicating pollers/gdelt.js.
@@ -240,7 +240,7 @@ export const BRENT = {
   // FRED daily Brent spot (DCOILBRENTEU) — no key needed for the CSV export.
   // Publishes with a few days' lag; used as fallback + long history.
   fredCsvUrl: 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU',
-  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) salmi-monitor/0.1',
+  userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) tutka-monitor/0.1',
   quotePollMs: 60 * 60_000,
   historyPollMs: 24 * 3600_000,
   volatilityWindowDays: 20,

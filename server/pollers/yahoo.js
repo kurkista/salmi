@@ -1,7 +1,7 @@
 // @ts-check
 // yahoo.js — shared Yahoo Finance chart fetch (unofficial API; callers must
 // have a fallback or tolerate staleness).
-const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) salmi-monitor/0.1';
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) tutka-monitor/0.1';
 
 /**
  * @param {string} symbol e.g. 'BZ=F', 'NESTE.HE'

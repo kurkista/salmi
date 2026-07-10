@@ -18,15 +18,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch aggregates from the live app
         env:
-          SALMI_URL: https://salmi.fly.dev
+          TUTKA_URL: https://tutka.fly.dev
         run: |
           mkdir -p data/export
-          curl -fsS --max-time 60 "$SALMI_URL/api/export" -o data/export/latest.json
+          curl -fsS --max-time 60 "$TUTKA_URL/api/export" -o data/export/latest.json
           python3 -m json.tool data/export/latest.json > /dev/null # sanity: valid JSON
           cp data/export/latest.json "data/export/$(date -u +%F).json"
       - name: Commit if changed
         run: |
-          git config user.name "salmi-export[bot]"
+          git config user.name "tutka-export[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/export
           git diff --cached --quiet || git commit -m "chore: daily data export $(date -u +%F)"

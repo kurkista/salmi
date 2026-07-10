@@ -18,8 +18,8 @@ on:
         default: false
 
 env:
-  SALMI_URL: https://salmi.fly.dev
-  GDELT_UA: 'salmi-monitor/0.1 (+https://github.com/kurkista/salmi)'
+  TUTKA_URL: https://tutka.fly.dev
+  GDELT_UA: 'tutka-monitor/0.1 (+https://github.com/kurkista/tutka)'
 
 jobs:
   relay:
@@ -88,7 +88,7 @@ jobs:
         run: |
           set -euo pipefail
           http_code=$(curl -sS -o response.json -w '%{http_code}' \
-            -X POST "${SALMI_URL}/api/ingest/gdelt/${GDELT_MODULE}" \
+            -X POST "${TUTKA_URL}/api/ingest/gdelt/${GDELT_MODULE}" \
             -H "Authorization: Bearer ${{ secrets.INGEST_TOKEN }}" \
             -H 'Content-Type: application/json' \
             --data @payload.json)
