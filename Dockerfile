@@ -15,6 +15,7 @@ RUN npm ci --omit=dev
 COPY server ./server
 COPY data/events.json ./data/events.json
 COPY METHODOLOGY.md ./METHODOLOGY.md
+COPY ROADMAP.md ./ROADMAP.md
 COPY --from=build /app/dist ./dist
 EXPOSE 8080
 # 192 MB heap cap leaves headroom for the runtime on a 256 MB machine
