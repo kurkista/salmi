@@ -172,6 +172,109 @@ export const NORDIC = {
 };
 
 // ---------------------------------------------------------------------------
+// Civic & critical infrastructure Index — domain 4 (cyberattacks, energy/
+// grid/water/telecom disruptions). Same GDELT V/T shape as NORDIC/INFOENV,
+// same "no clean daily official series" reasoning. Distinct from those two
+// in one way: it also gets a second, genuinely independent source — NCSC-FI's
+// public warnings RSS feed (see NCSCFI below and pollers/ncscfi.js) — logged
+// as headlines (module 'infra_advisory'), not yet scored into the index
+// itself. Verified 2026-07-24: NCSC-FI's feed is live, structured RSS, no
+// auth/bot-wall. ENISA was considered but not confirmed to have a continuous
+// feed (looked like annual-report-only) — not integrated pending a real check.
+// See indices/infra.js and METHODOLOGY.md.
+// ---------------------------------------------------------------------------
+export const INFRA = {
+  version: 'infra-v0',
+  weights: { V: 0.6, T: 0.4 },
+  bands: [
+    { min: 70, name: 'CALM' },
+    { min: 45, name: 'ELEVATED' },
+    { min: 20, name: 'STRAINED' },
+    { min: 0, name: 'CRITICAL' },
+  ],
+  hysteresisPoints: 2,
+  newsLog10Span: 1,
+  toneCalm: 0,
+  toneExtreme: -8,
+  stalenessMs: {
+    V: 3 * 3600_000,
+    T: 24 * 3600_000,
+  },
+  recomputeMs: 5 * 60_000,
+  snapshotMs: 15 * 60_000,
+};
+
+// ---------------------------------------------------------------------------
+// NCSC-FI (Kyberturvallisuuskeskus) public warnings RSS — domain 4's second,
+// independent (non-GDELT) source. Confirmed live 2026-07-24:
+// https://www.kyberturvallisuuskeskus.fi/feed/rss/fi/401 returns HTTP 200,
+// well-formed RSS 2.0, real recent items. Logged as headlines, not scored —
+// same "shown, not scored" treatment as domain 1's AIS/OpenSky layer, until
+// there's an honest way to turn advisory counts into a signal.
+// ---------------------------------------------------------------------------
+export const NCSCFI = {
+  feedUrl: 'https://www.kyberturvallisuuskeskus.fi/feed/rss/fi/401',
+  module: 'infra_advisory',
+  userAgent: 'tutka-monitor/0.1 (+https://github.com/kurkista/tutka)',
+  pollMs: 60 * 60_000,
+};
+
+// ---------------------------------------------------------------------------
+// ENISA EUVD (European Union Vulnerability Database) — a real JSON REST API,
+// NOT enisa.europa.eu's general news RSS (that turned out to be irregular
+// press content, not threat intel — checked and rejected 2026-07-24). EUVD
+// launched under NIS2 in 2025; confirmed live 2026-07-24, returns fresh
+// CVE-style records with CVSS/vendor data. No key required. Logged as
+// headlines like NCSC-FI, not scored — same reasoning as NCSCFI above.
+// ---------------------------------------------------------------------------
+export const EUVD = {
+  apiUrl: 'https://euvdservices.enisa.europa.eu/api/lastvulnerabilities',
+  module: 'infra_advisory',
+  userAgent: 'tutka-monitor/0.1 (+https://github.com/kurkista/tutka)',
+  pollMs: 60 * 60_000,
+};
+
+// ---------------------------------------------------------------------------
+// CERT-EU security-advisories RSS — EU-institutional advisory feed, confirmed
+// live 2026-07-24 (real cadence, ~monthly with clustering, most recent item
+// same-week at verification time). Optional third infra_advisory source;
+// same "logged, not scored" treatment.
+// ---------------------------------------------------------------------------
+export const CERTEU = {
+  feedUrl: 'https://cert.europa.eu/publications/security-advisories-rss',
+  module: 'infra_advisory',
+  userAgent: 'tutka-monitor/0.1 (+https://github.com/kurkista/tutka)',
+  pollMs: 6 * 3600_000,
+};
+
+// ---------------------------------------------------------------------------
+// Fingrid Open Data — the transmission system operator's "power system
+// state" dataset: a traffic-light indicator (1 green .. 5 blue, see
+// dataset docs) that IS Fingrid's own incident/anomaly assessment, not a
+// raw series needing custom anomaly detection. Confirmed live 2026-07-24 via
+// the developer portal (developer-data.fingrid.fi) and a direct curl against
+// data.fingrid.fi/api/datasets/209/data/latest, which returned a real
+// current value ({"datasetId":209,...,"value":1}) — dataset 209 = "Power
+// system state - real-time data" (1 green .. 5 blue), confirmed by id in the
+// dataset's own example-data panel. Also added dataset 336 = "Electricity
+// shortage status" (0 normal .. 3 shortage), same traffic-light shape,
+// found alongside 209 in the same search. Auth is a subscription key in the
+// `x-api-key` header (confirmed via the portal's "Try it" panel); the owner
+// already has a provisioned key ("sauna-study" subscription) which is set
+// locally in .env per CLAUDE.md's secrets rule — still needs `fly secrets
+// set FINGRID_API_KEY` to go live on the deployed app.
+// ---------------------------------------------------------------------------
+export const FINGRID = {
+  apiBase: 'https://data.fingrid.fi/api/datasets',
+  apiKey: process.env.FINGRID_API_KEY || '',
+  datasets: {
+    powerSystemState: 209, // 1 green, 2 yellow, 3 red, 4 black, 5 blue
+    electricityShortageStatus: 336, // 0 normal, 1 possible, 2 high risk, 3 shortage
+  },
+  pollMs: 5 * 60_000,
+};
+
+// ---------------------------------------------------------------------------
 // Pollers
 // ---------------------------------------------------------------------------
 export const POLYMARKET = {
@@ -227,6 +330,19 @@ export const GDELT = {
       module: 'infoenv',
       query: '(Finland OR Estonia OR Latvia OR Lithuania OR Baltic) AND (disinformation OR propaganda OR "influence operation" OR "information operation")',
       seriesPrefix: 'gdelt_infoenv_',
+      pollMs: 30 * 60_000,
+      calmStart: '20250101000000',
+      calmEnd: '20251231235959',
+    },
+    // Domain 4's GDELT half — see INFRA/NCSCFI/EUVD/CERTEU/FINGRID above for
+    // the rest of the domain. Query is a draft: geographic prefix anchors it
+    // to Finland/Baltic so "power outage"/"blackout" don't pull in unrelated
+    // global storm coverage; retune once real volume is visible, same caveat
+    // as nordic's query above.
+    infra: {
+      module: 'infra',
+      query: '(Finland OR Estonia OR Latvia OR Lithuania OR Baltic) AND (cyberattack OR "cyber attack" OR ransomware OR "power outage" OR blackout OR "grid failure" OR "critical infrastructure")',
+      seriesPrefix: 'gdelt_infra_',
       pollMs: 30 * 60_000,
       calmStart: '20250101000000',
       calmEnd: '20251231235959',

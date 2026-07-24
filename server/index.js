@@ -3,8 +3,8 @@
 try { process.loadEnvFile(); } catch { /* no .env — fine in production */ }
 
 import {
-  DB_PATH, VESSELS, INFOENV, NORDIC, GDELT,
-  ELECTRICITY, STATFIN, STOCKS, FX, OPENSKY,
+  DB_PATH, VESSELS, INFOENV, NORDIC, INFRA, GDELT,
+  ELECTRICITY, STATFIN, STOCKS, FX, OPENSKY, NCSCFI, EUVD, CERTEU, FINGRID,
 } from './config.js';
 import { openDb, putTransit, prune, transitsSince, upsertVesselsDaily, putSeries } from './db.js';
 import { VesselStore } from './vessels.js';
@@ -14,6 +14,7 @@ import { register } from './scheduler.js';
 import { bus } from './bus.js';
 import { gatherAndComputeNordic } from './indices/nordic.js';
 import { gatherAndComputeInfoEnv } from './indices/infoenv.js';
+import { gatherAndComputeInfra } from './indices/infra.js';
 import { pollGdelt } from './pollers/gdelt.js';
 import { pollElectricity } from './pollers/electricity.js';
 import { pollPump } from './pollers/pump.js';
@@ -21,6 +22,10 @@ import { pollCpi } from './pollers/pxweb.js';
 import { pollStocks } from './pollers/stocks.js';
 import { pollFx } from './pollers/fx.js';
 import { pollOpenSky } from './pollers/opensky.js';
+import { pollNcscFi } from './pollers/ncscfi.js';
+import { pollEuvd } from './pollers/euvd.js';
+import { pollCertEu } from './pollers/certeu.js';
+import { pollFingridState } from './pollers/fingrid.js';
 
 openDb(DB_PATH);
 
@@ -86,6 +91,7 @@ function countTransitsBetween(startTs, endTs, dir) {
 
 register('gdelt_nordic', () => pollGdelt(GDELT.modules.nordic), GDELT.modules.nordic.pollMs);
 register('gdelt_infoenv', () => pollGdelt(GDELT.modules.infoenv), GDELT.modules.infoenv.pollMs);
+register('gdelt_infra', () => pollGdelt(GDELT.modules.infra), GDELT.modules.infra.pollMs);
 register('electricity', pollElectricity, ELECTRICITY.pollMs);
 register('pump', pollPump, STATFIN.pollMs);
 register('cpi', pollCpi, STATFIN.pollMs);
@@ -98,6 +104,15 @@ if (OPENSKY.clientId && OPENSKY.clientSecret) {
 }
 register('nordic_index', async () => { gatherAndComputeNordic(); }, NORDIC.recomputeMs);
 register('infoenv_index', async () => { gatherAndComputeInfoEnv(); }, INFOENV.recomputeMs);
+register('infra_index', async () => { gatherAndComputeInfra(); }, INFRA.recomputeMs);
+register('ncscfi', pollNcscFi, NCSCFI.pollMs);
+register('euvd', pollEuvd, EUVD.pollMs);
+register('certeu', pollCertEu, CERTEU.pollMs);
+if (FINGRID.apiKey) {
+  register('fingrid', pollFingridState, FINGRID.pollMs);
+} else {
+  console.warn('[main] FINGRID_API_KEY not set — power-system-state signal disabled.');
+}
 register('prune', async () => { prune(); }, 24 * 3600_000);
 
 // --- shutdown --------------------------------------------------------------------
